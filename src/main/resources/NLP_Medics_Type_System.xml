@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>NLP_Medics_Type_System</name>
+  <description>A type system corresponding to the updated medics schema in the HSIS CCTS Oracle sytem at UAB. Represents the NLP_Clobs, NLP_Hits and I2B2_2010_Concept_Assertion Table.
+Now includes support for the NLP_ENTITY* tables</description>
+  <version>1.2</version>
+  <vendor/>
+  <!--
+  <imports>
+  	<import location="MetaMapApiTypeSystem.xml"/>
+  </imports>
+  -->
+  <types>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.NLP_Clobs</name>
+      <description>Describes UAB's HSIS NLP_DOCS table with the exception of the document text.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>URI</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>ReportID</name>
+          <description>Should be changed to number, will represent medics unique identifier.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MRN</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DateOfService</name>
+          <description>No date features appears to be present in UIMA, using String. Should be stored in Oracle date format.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Source</name>
+          <description>Source of the document type, actual ontology/dictionary used to construct is unknown. Careflow, ICDA are main systems.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocumentTypeAbbreviation</name>
+          <description>Corresponds to the "type" column in NLP_CLOBS table.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocumentSubType</name>
+          <description>Corresponds to NLP_CLOBS NC_Subtype</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocumentVersion</name>
+          <description>The version of the document, typically 1, 2 or 3 from Careflow.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>HasBeenProcessed</name>
+          <description>Whether the document has been processed by any pipeline, just cancer registry for now.</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MedicsArrivalTime</name>
+          <description>Date at which document arrived in NLP_Clobs</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SourceID</name>
+          <description>Identifier in the source</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>JavaHashCode</name>
+          <description>Java 32 bit hash code String.hashCode() of documenmt.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>ImportAnalysis</name>
+          <description>The analysis responsible (if any) for inserting this document into Medics.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.NLP_Hits_Extended</name>
+      <description>Corresponds to the NLP_HITS_EXTENDED table. This is really a wrapper for a bunch of other concepts thrown into a convienence patient centric representation.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>HitID</name>
+          <description>Primary key of table</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>HitText</name>
+          <description>Text that was used to derive the concept as best determined by that algorithm.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisID</name>
+          <description>Identifier to the primary key of the analysis that was done, foudn in the NLP_ANALYSIS table.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocumentID</name>
+          <description>The document identifier from whence the hit was derived.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>ConceptText</name>
+          <description>Text of the concept in the Ontology, typically a concept name in UMLS. Not neccessarily the "best" named as determined by MRRANK or MetaMap</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>PreferredName</name>
+          <description>UMLS preferred name for the concept</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>HitTextExtended</name>
+          <description>The text around the hit, including flanking regions that are outside the text that was used to determine the concept to provide context.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>CUI</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SNOMEDID</name>
+          <description>SNOMED ID of hit</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>ExternalHitID</name>
+          <description>Reference to another system that may have generated this hit if any, for example YTEX.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SegmentName</name>
+          <description>Name of the PTL Segment, DRUGS, PROBLEMS, etc..</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>UMLSSemanticTypes</name>
+          <description>List of semantic types from UMLS, have not decided on Txxx format or the short abbreviation yet (neop)</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Score</name>
+          <description>Score produced by software, typically MetaMap</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MRN</name>
+          <description>Medical Record Number (often null)</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>isPossible</name>
+          <description>Indicates uncertainity, corresponding to the ShareClef 2015 values. yes means there is doubt/uncertainity.</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>isNegated</name>
+          <description/>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SubjectClass</name>
+          <description>Originally refered to the patient or to a family member. Now it is ia mini-vocabulary based on ShareClef 2015 that can have values patient, family_member, donor_family_member, donor_other, null, other</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>CourseClass</name>
+          <description>Corresponds to ShareClef 2015, unmarked, changed, increased, decreased, improved, worsened and resolved.
+
+Was Line starting (index from 1, not 0) that annotation occured at in the document.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SeverityClass</name>
+          <description>unmarked (default), slight, moderate, severe
+
+Was Line (index from 1, not 0) that the annotation ended at in the document.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>IsConditional</name>
+          <description>0 indicates hit is not conditional, 1 indicates it does. May later replace with cvterm_id to something more nuanced.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>IsGeneric</name>
+          <description>A 1 indicates this a generic mention (not specific to subject/patient) whereas the default 0 indicates it refers to the subject.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MappingScore</name>
+          <description>How well the hit maps in conjunction with others in the same phrase to its target.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>NERType</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>LineStartIndex</name>
+          <description>Old line start index</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>LineStopIndex</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.DocumentSegment</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>SegmentName</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>CutoffScore</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>Regex</name>
+          <description>The regular expression used to locate the start of this segment.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.I2B2ConceptAssertion</name>
+      <description>Represents the I2B2_2010_Concept_Assertion table</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>Text</name>
+          <description>Text from document corresponding to annotation</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>LineStart</name>
+          <description>On what line the annotation starts</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>WordStart</name>
+          <description>The word index when the annotation starts</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>LineStop</name>
+          <description>Line on which the annotation stops.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>WordStop</name>
+          <description>Index of the word on which the annotation stops</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>NERType</name>
+          <description>Named Entity Recognition Type (problem, treatment, or test)</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>I2B2DocumentID</name>
+          <description>Identifying document id - filename without extension</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Source</name>
+          <description>Source of i2b2 Documents.
+beth, partners or test</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.NLP_Analysis</name>
+      <description>The result of an analysis run.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>AnalysisType</name>
+          <description>Type of the analysis</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisID</name>
+          <description>Primary key in database that analysis result was inserted into</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisSoftware</name>
+          <description>Name of the pipeline or aggregate analysis used.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisSoftwareVersion</name>
+          <description>Version of the pipeline, typically subversion commit #</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Machine</name>
+          <description>Hostname that the pipeline ran on, for example, ASH, etc..</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisConceptFilter</name>
+          <description>Description of any concept filtering, can include UMLS semantic types, stop concepts, etc..</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisDate</name>
+          <description>Date analysis was started, use Oracle date format.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisDataSet</name>
+          <description>Should be integer now.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocumentSource</name>
+          <description>Long form text description of the selection criteria for these documents.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>UMLSRelease</name>
+          <description>UMLS Release, ex) 2012AB</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MetaMapVersion</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MetaMapHostname</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MedicsURL</name>
+          <description>MedicsURL, using it as a parameter holder</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnnotatorID</name>
+          <description>ID for annotator</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnnotatorAnalysisSeed</name>
+          <description>Analysis used to pre-populate the document set for the annotator to make their life easier.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisStopDate</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>MetaMapPort</name>
+          <description>The MetaMap port to use, more than one may be available.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>UMLSConnectionString</name>
+          <description>Connection string to connect to a locate Oracle instance of UMLS</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.Document_Results</name>
+      <description>Contains document level results, including the serailized CAS as a string, number of annotations, etc...</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>DocumentID</name>
+          <description>ID of document that the result came from.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AnalysisID</name>
+          <description>Foreign key to analysis table</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>XMI_ResultString</name>
+          <description>CAS outputed as XMI</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>StatusID</name>
+          <description>The status of the processing, corresponds to an entry in the NLP_DOC_STATUS table. 3 is success, all other are incompletes or error codes.</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.SemEvalMapping</name>
+      <description>SemEval discontinous mapping to UMLS CUI</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>DocumentIdentifier</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SemEvalSemantictype</name>
+          <description>The semantic type being analyzed.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SemEvalCUI</name>
+          <description>UMlS CUI mapped to</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SemEvalSpans</name>
+          <description>SemEval spans for the mapped text, may be discontinous. 0 is the start, 1 is the end, 2 is the start of the 2nd piece of text, 3 is the end of the 2nd element</description>
+          <rangeTypeName>uima.cas.IntegerArray</rangeTypeName>
+          <multipleReferencesAllowed>false</multipleReferencesAllowed>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.ShareClefDisease</name>
+      <description>Holds the ShareClef 2014 concepts</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>NegationIndicator</name>
+          <description>True if negated, output yes</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SubjectClass</name>
+          <description>patient (default), family_member, donor_family_member, donor_other,null,other</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>UncertainityIndicator</name>
+          <description>True (yes) if uncertain</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>CourseClass</name>
+          <description>unmarked (default), changed, increased, decreased, improved, worsened, resolved</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>SeverityClass</name>
+          <description>unmarked (default), slight, moderate, severe</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>ConditionalClass</name>
+          <description>True (yes) if disease conditionally exists (example, ruling out?)</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>GenericClass</name>
+          <description>true if a generic mention of a disease, false default</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>BodyLocation</name>
+          <description>NULL (default), CUI,CUI-less</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DocTimeClass</name>
+          <description>TimeML Expression</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>TemporalExpression</name>
+          <description>TimeML Expression</description>
+          <rangeTypeName>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>FileName</name>
+          <description>Name of file for ShareClef output</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DiseaseCUIs</name>
+          <description>List of CUIs associated with disease</description>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DiseaseOffsets</name>
+          <description>Strings of "start-end" mapping to DiseaseCUIs</description>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.ShareClef2014_attribute</name>
+      <description>ShareClef attribute, ex) negation, body location, etc...</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>ShareClefValue</name>
+          <description>Value</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.Span</name>
+      <description>Span of text in as document, stored in a database.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>spanID</name>
+          <description>span_id in database</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>documentID</name>
+          <description>docID from NLP_Docs</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.Entity</name>
+      <description>An entity detected by an NER tool. Stored in database.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>entityID</name>
+          <description>id in database</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>analysisID</name>
+          <description>Analysis in database</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>humanAnnotationID</name>
+          <description>ID of NLP_Annotation</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>entityTypeID</name>
+          <description>cvterm_id for entity type</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>mrn</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>score</name>
+          <description>raw score from analysis that found entity</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>documentID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.EntityConceptMap</name>
+      <description>Mapping of concepts (CUIs/cvterms) to entities</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>entityConceptMapID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>analysisID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>entityID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>cvtermID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>CUI</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>polarity</name>
+          <description/>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>conceptGroupID</name>
+          <description>Default 0, other CUIs with the same group number and jointly describing an entity</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>humanAnnotationID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.EntityEntityRelation</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>entityEntityRelationID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>subjectEntityID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>objectEntityID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>relationTypeID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>analysisID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>humanAnnotationID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>polarity</name>
+          <description/>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.EntitySpanComposition</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>entityID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>spanID</name>
+          <description/>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>
