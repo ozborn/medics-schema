@@ -7,7 +7,7 @@
 	<version>0.2</version>
 	<packaging>jar</packaging>
 
-	<name>UabUimaTools</name>
+	<name>Medics Schema and Tools</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
