@@ -5,6 +5,7 @@ import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -15,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
+
 import java.text.Normalizer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -30,13 +32,16 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.html.HtmlParser;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
-import org.apache.commons.io.input.ReaderInputStream;
+
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
+
 import org.apache.uima.collection.CollectionException;
-import org.apache.uima.util.Level;
-import org.apache.uima.util.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Was CollectionReaderTools with all simple CRUD or CRUD-like operations
@@ -50,106 +55,39 @@ import org.apache.uima.util.Logger;
  *
  */
 public class LegacyMedicsTools {
-
-	/**
-	 * Get a Medics document from the database as a string,
-	 * ensures that any subsequently document analysis is 
-	 * using the same document and no database conversions
-	 * have occurred
-	 * @param id
-	 * @return
-	 */
-	public static String fetchMedicsClobAsString(int id,
-			String url) throws Exception, SQLException {
-		Connection con = null;
-		Statement st = null;
-		String query = null;
-		String outstring = null;
-		try {
-			con =  DriverManager.getConnection(url);
-			st = con.createStatement();
-			query = "SELECT NC_CLCONT FROM medics.NLP_DOCS WHERE NC_REPORTID="+
-					id;
-			ResultSet resultset = (ResultSet) st.executeQuery(query);
-			resultset.next();
-			Clob thetext = resultset.getClob(1);
-			BufferedReader br = new BufferedReader(thetext.getCharacterStream());
-			StringWriter sw = new StringWriter();
-			int c = -1;
-			while( (c=br.read())!=-1) {
-				sw.write(c);
-			}
-			sw.flush();
-			outstring = sw.toString();
-			resultset.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.err.println("Failed to retrieved CLOB in NLP_DOCS for nc_reportid "+id);
-			throw e;			 
-		} finally {
-			con.close();
-			st.close();
-		}
-		return outstring;
-	}
+	
+    private static final Logger logger = LoggerFactory.getLogger(LegacyMedicsTools.class);
 
 
 	/**
-	 * Looking into this as a possible replacement for my earlier
-	 * stupid fetchDoc code
-	 * @param thedoc
+	 * Fetches a String in its original coding with
+	 * newlines converted to \n from a Clob
+	 * @param ptl
 	 * @return
 	 * @throws Exception
 	 */
-	public static String fetchByTika(Clob thedoc) throws Exception {
-		String s = null;
-		try{
-			Metadata metadata = new Metadata();
-			ReaderInputStream is = new ReaderInputStream(thedoc.getCharacterStream()); 
-			s = tikaFetchDoc(null, is, metadata);
-			is.close();
-		}
-		catch(Exception te) {
-			System.err.println("Tika exception after Word extraction failure");
-			te.printStackTrace();
-			throw te;
-		}
-		return s;
-	}
-
-
-	public static String fetchDoc(Clob ptl) throws Exception {
+	public static String fetchDoc(Clob someclob) throws Exception {
 		String line;
 		String s;
-		Reader reader = null;
-		InputStream is = null;
-		StringBuffer wholedoc = new StringBuffer((int)ptl.length());
-		try {
-			//InputStream is = ptl.getAsciiStream();
-			//BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			reader = ptl.getCharacterStream();
+		StringBuffer wholedoc = new StringBuffer((int)someclob.length());
+		try (Reader reader = someclob.getCharacterStream()) {
 			BufferedReader br = new BufferedReader(reader);
 			while((line = br.readLine()) != null) {
 				wholedoc.append(line+"\n");
 			}
 		} catch (Exception e) {
 			// Problem with Word conversion from Clob approach - try extracting text via Tika
-			System.out.println("Word text extraction exception - (Clob) trying Tika approach");			
-			try{
+			logger.warn("Character stream converseion failed for Clob, trying Tika approach..");
+			try(InputStream is = someclob.getAsciiStream()){
 				Metadata metadata = new Metadata();
-				is = ptl.getAsciiStream();
 				s = tikaFetchDoc(null, is, metadata);
 				wholedoc = new StringBuffer(s);
 			}
 			catch(Exception te) {
-				System.out.println("Tika exception after Word extraction failure");
+				logger.error("Tika exception after Tika asci extraction failure");
 				te.printStackTrace();
 				throw te;
-			} finally {
-				if(is != null) is.close();
-			}
-		} finally {
-			if(reader != null) reader.close();
+			} 
 		}
 		return wholedoc.toString();
 	}
@@ -166,16 +104,13 @@ public class LegacyMedicsTools {
 			lady.writeText(pdoc, sw);
 			sw.flush();
 			s = sw.toString();
-
 		} catch (Exception e) {
-			// Problem with PDFBox approach - try extracting text via Tika
-			//System.out.println("Jun25 PDF text extraction exception - trying Tika approach");
 			try{
 				Metadata metadata = new Metadata();
 				s = tikaFetchDoc(pdf, null, metadata);								
 			}
 			catch(Exception te) {
-				System.out.println("Jun25  Tika exception after PDF extraction failure");
+				logger.warn("PDFBox and Tika Blob extraction failures");
 				te.printStackTrace();
 				throw te;
 			}
@@ -184,7 +119,18 @@ public class LegacyMedicsTools {
 	}
 
 
-
+	/**
+	 * Uses tika to autodetect the document type and return a String. If blob
+	 * is set to null it uses the InputStream iis
+	 * @param blob
+	 * @param iis Non-blob input stream for Tika to parse, will be closed
+	 * @param metaData
+	 * @return
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws TikaException
+	 * @throws Exception
+	 */
 	public static String tikaFetchDoc(Blob blob, InputStream iis, Metadata metaData) throws IOException,SAXException, TikaException , Exception{
 		String s = null;
 		AutoDetectParser parser = new AutoDetectParser();
@@ -199,19 +145,17 @@ public class LegacyMedicsTools {
 				parser.parse(iis, handler, metaData, new ParseContext());
 
 			s = handler.toString();
-		} catch (IOException ioe) { //These likely should be logger calls
-			System.out.println("Tika IO Exception on Blob input stream");
+		} catch (IOException ioe) { 
+			logger.error("Tika IO Exception on input stream: "+ioe.getMessage());
 			throw(ioe);
 		} catch (SAXException saxe) {
-			System.out.println("Tika Sax Exception - SAX events could not be processed");
+			logger.error("Tika Sax Exception - SAX events could not be processed");
 			throw(saxe);
 		} catch (TikaException tikae) {
-			System.out.println("Tika Exception - the document could not be parsed - may be corrupt");
-			// tikae.printStackTrace();
+			logger.error("Tika Exception - the document could not be parsed - may be corrupt");
 			throw(tikae);
 		} catch (Exception e) {
-			System.out.println("Tika Other exception..");
-			// e.printStackTrace();
+			logger.error("Other Tika related exception "+e.getMessage());
 			throw e;
 		} finally {
 			if(is != null) is.close();
@@ -226,17 +170,16 @@ public class LegacyMedicsTools {
 	 * If we fail, just return the original text
 	 * @param broken_html
 	 */
-	public static String detagHTML(String broken_html, Logger logger){
+	public static String detagHTML(String broken_html){
 		String plainText = null;
 		broken_html = "<HTML>"+broken_html+"</HTML>";
-		try {
-			InputStream input = new ByteArrayInputStream(broken_html.getBytes("UTF-8"));
+		try (InputStream input = new ByteArrayInputStream(broken_html.getBytes("UTF-8"))){
 			ContentHandler handler = new BodyContentHandler();
 			Metadata metadata = new Metadata();
 			new HtmlParser().parse(input, handler, metadata, new ParseContext());
 			plainText = handler.toString();
 		} catch (UnsupportedEncodingException e) {
-			logger.log(Level.WARNING,"Detagging HTML failed, cant' handle UTF-8");
+			logger.warn("Detagging HTML failed, cant' handle UTF-8");
 			e.printStackTrace();
 			return broken_html;
 		} catch (Exception e) {
@@ -244,36 +187,38 @@ public class LegacyMedicsTools {
 			return broken_html;
 		}
 		return plainText;
-
 	}
 
 
 
+	/**
+	 * Uses Apache POI WordExtractor to process Word Documents
+	 * @param wordBlob
+	 * @return
+	 * @throws Exception
+	 */
 	public static String fetchWordDoc(Blob wordBlob) throws Exception {
 		String s = null;
-		InputStream is = wordBlob.getBinaryStream();
-		try (WordExtractor wordExt = new WordExtractor(is)){
+		try (   InputStream is = wordBlob.getBinaryStream();
+				WordExtractor wordExt = new WordExtractor(is);){
 			s = wordExt.getText();
-			if(is!=null) is.close();
 			wordExt.close();
 		} catch (Exception e) {
-			//e.printStackTrace();
-			// Problem with Word conversion from Clob approach - try extracting text via Tika
-			System.out.println("Word text extraction exception (Blob) - trying Tika approach");
+			logger.warn("Word text extraction exception (Blob) - trying Tika approach");
 			try{
 				Metadata metadata = new Metadata();
 				s = tikaFetchDoc(wordBlob, null, metadata);								
 			}
 			catch(Exception te) {
-				System.out.println("Tika exception after PDF extraction failure");
+				logger.error("Tika failed to convert (Word) blob.."+te.getMessage());
 				te.printStackTrace();
 				throw te;
 			}			
-		} finally {
-			if(is != null) is.close();
-		}	
+		}
 		return s;
 	}
+	
+	
 
 	/**
 	 * Want to convert a UTF String to ASCII and strip control characters
@@ -501,6 +446,54 @@ public class LegacyMedicsTools {
 
 		return hs;
 	}
+	
+	
+
+	/**
+	 * Get a Medics document from the database as a string,
+	 * ensures that any subsequently document analysis is 
+	 * using the same document and no database conversions
+	 * have occurred
+	 * @param id
+	 * @return
+	 */
+	public static String fetchMedicsClobAsString(int id,
+			String url) throws Exception, SQLException {
+		Connection con = null;
+		Statement st = null;
+		String query = null;
+		String outstring = null;
+		try {
+			con =  DriverManager.getConnection(url);
+			st = con.createStatement();
+			query = "SELECT NC_CLCONT FROM medics.NLP_DOCS WHERE NC_REPORTID="+
+					id;
+			ResultSet resultset = (ResultSet) st.executeQuery(query);
+			resultset.next();
+			Clob thetext = resultset.getClob(1);
+			BufferedReader br = new BufferedReader(thetext.getCharacterStream());
+			StringWriter sw = new StringWriter();
+			int c = -1;
+			while( (c=br.read())!=-1) {
+				sw.write(c);
+			}
+			sw.flush();
+			outstring = sw.toString();
+			resultset.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Failed to retrieved CLOB in NLP_DOCS for nc_reportid "+id);
+			throw e;			 
+		} finally {
+			con.close();
+			st.close();
+		}
+		return outstring;
+	}
+
+	
+	
+	
 
 
 	/**
@@ -509,20 +502,18 @@ public class LegacyMedicsTools {
 	 * @return
 	 */
 	public static ResultSet fetchDocumentResultSet(Connection con, Statement _st,
-			String whereClause, Logger logger, String url, String target, String select)
+			String whereClause, String url, String target, String select)
 					throws SQLException {
 		ResultSet resultset = null;
 		try {
 			if (con == null) {
 				String deadconnection = "Dead (null) database connection!?!\n";
-				if(logger!=null) logger.log(Level.SEVERE,deadconnection);
-				else System.err.println(deadconnection);
+				logger.error(deadconnection);
 				con =  DriverManager.getConnection(url);
 			}
 			_st = con.createStatement();
 			String query ="SELECT "+select+" FROM "+target+" "+whereClause;
-			if(logger!=null) logger.log(Level.INFO,"Resultset query was:"+query);
-			else System.err.println("Query was:"+query);
+			logger.info("Resultset query was:"+query);
 			resultset = (ResultSet) _st.executeQuery(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -651,10 +642,10 @@ public class LegacyMedicsTools {
 
 
 	public static void determineAnalysisStatus(Connection conn, int expected_docs, 
-			int analysis_id, Logger logger) throws SQLException{
+			int analysis_id) throws SQLException{
 		int status=1;
 		int observed_docs=-1;
-		logger.log(Level.INFO,"Expecting "+expected_docs+" docs");
+		logger.info("Expecting "+expected_docs+" docs");
 		if(expected_docs!=0){
 			String target = " NLP_DOC_HISTORY ";
 			String where_clause=" WHERE ANALYSIS_ID="+analysis_id+
@@ -677,7 +668,7 @@ public class LegacyMedicsTools {
 			}
 		} else status=MedicsConstants.ANALYSIS_EMPTY_STATUS;
 		UpdateAnalysisStatus(conn, status, analysis_id);
-		logger.log(Level.INFO,"Updating analysis "+analysis_id+" with status "+status+"");
+		logger.info("Updating analysis "+analysis_id+" with status "+status+"");
 		//conn.commit();
 	}
 

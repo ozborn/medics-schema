@@ -16,7 +16,7 @@ public class MedicsConstants {
 	public static final int ANALYSIS_EMPTY_STATUS=4;
 	public static final int ANALYSIS_MOSTLY_WORKED_STATUS=5;
 	public static final int ANALYSIS_INITATED_STATUS=6;
-	
+
 	public static final int DOCUMENT_PROCESSING_INITIATED=1;
 	public static final int DOCUMENT_CONVERTED=2;
 	public static final int DOCUMENT_HITS_PROCESSING_COMPLETE=3;
