@@ -425,14 +425,19 @@ public class LegacyMedicsTools {
 	}
 
 
-	public static HashSet<Integer> getMedicsIdentifiers(String sql, String url)
+	/**
+	 * Gets Integer identifiers from Medics (or other source) as the first column
+	 * returned from the SQL and returns all results as a HashSet
+	 * @param sql
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	public static HashSet<Integer> getIntegerIdentifiers(String sql, String url)
 			throws Exception {
 		HashSet<Integer> hs = new HashSet<Integer>();
-		Connection con = null;
-		Statement st = null;
-		try {
-			con =  DriverManager.getConnection(url);
-			st = con.createStatement();
+		try (Connection con =  DriverManager.getConnection(url);
+			Statement st = con.createStatement();){
 			ResultSet resultset = st.executeQuery(sql);
 			while(resultset.next()){
 				String s = resultset.getString(1);
@@ -442,8 +447,7 @@ public class LegacyMedicsTools {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e; 
-		} finally { st.close(); con.close(); }
-
+		} 
 		return hs;
 	}
 	
