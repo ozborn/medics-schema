@@ -22,11 +22,24 @@ public class PropertiesResource_impl implements PropertiesResource, SharedResour
    * @see org.apache.uima.resource.SharedResourceObject#load(DataResource)
    */
   public void load(DataResource aData) throws ResourceInitializationException {
-    log.info("URI was:"+aData.getUri());
+    if(aData.getUri()!=null) log.info("Loading properties from URI:"+aData.getUri());
     try (InputStream inStr = ClassLoader.getSystemResourceAsStream(aData.getUri().toString())){
       prop.load(inStr);
-    } catch (IOException e) {
-      throw new ResourceInitializationException(e);
+    } catch (Exception e) {
+      if(aData.getUri().toString().indexOf("!")!=-1) {
+        String jaroffset = aData.getUri().toString().substring(aData.getUri().toString().indexOf("!")+2);
+        if(jaroffset!=null) log.warn("Properties load failed for "
+        +aData.getUri()+" , trying properties load from:"+jaroffset);
+        try (InputStream inStr = ClassLoader.getSystemResourceAsStream(jaroffset)){
+           prop.load(inStr);
+        } catch (Exception jare) {
+          jare.printStackTrace();
+      	  throw new ResourceInitializationException(jare);
+        }
+      } else {
+        e.printStackTrace();
+        throw new ResourceInitializationException(e);
+      }
     } 
   }
 
