@@ -450,6 +450,26 @@ public class LegacyMedicsTools {
 		} 
 		return hs;
 	}
+
+	public static HashSet<Double> getDoubleIdentifiers(String sql, String url)
+			throws Exception {
+		HashSet<Double> hs = new HashSet<Double>();
+		try (Connection con =  DriverManager.getConnection(url);
+			Statement st = con.createStatement();){
+			ResultSet resultset = st.executeQuery(sql);
+			while(resultset.next()){
+				String s = resultset.getString(1);
+				hs.add(Double.parseDouble(s));
+			}
+			resultset.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e; 
+		} 
+		return hs;
+	}
+
+	
 	
 	
 
