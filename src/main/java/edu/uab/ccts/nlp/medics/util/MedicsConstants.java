@@ -31,4 +31,6 @@ public class MedicsConstants {
 	public static final int DOCUMENT_NULL_BLOB_FAILURE=13;
 	public static final int DOCUMENT_DONE_ELSEWHERE=14; //- Document done in another equivalent analysis
 	public static final int DOCUMENT_DATABASE_WRITE_FAIL=15; // Failed to write document to Medics Database
+	
+	public static final int MRN_ANONYMOUS_SENTINEL_VALUE=0;
 }
