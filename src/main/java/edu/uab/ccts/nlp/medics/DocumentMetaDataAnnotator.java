@@ -87,14 +87,18 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
 		NLP_Clobs pprop =  new NLP_Clobs(jcas);
+		if(sourceIdentifier!=null) { 
+			pprop.setSourceID(sourceIdentifier); 
+		} else { 
+			parseDocumentMetaDataFromUrl(jcas,pprop);
+		}
 		if(patientIdentifier!=null) pprop.setMRN(Integer.parseInt(patientIdentifier));
 		if(documentCreationDate!=null) pprop.setDateOfService(documentCreationDate);
 		pprop.setDocumentTypeAbbreviation(type);
 		pprop.setDocumentSubType(subtype);
 		pprop.setDocumentVersion(version);
 		pprop.setSource(source);
-		if(sourceIdentifier!=null) { pprop.setSourceID(sourceIdentifier); return; } 
-		parseDocumentMetaDataFromUrl(jcas,pprop);
+		pprop.addToIndexes();
 		return;
 	}
 

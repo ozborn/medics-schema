@@ -32,7 +32,7 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 	= "Type of analysis being run, see Medics Type System (MedicsConstants) for options";
 	@ConfigurationParameter(
 			name = PARAM_ANALYSIS_TYPE,
-			mandatory = true,
+			mandatory = false,
 			description = ANALYSIS_TYPE_DESCRIPTION)
 	int analysisType = 0;
 
