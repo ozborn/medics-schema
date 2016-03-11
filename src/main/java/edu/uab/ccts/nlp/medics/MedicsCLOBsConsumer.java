@@ -1,7 +1,6 @@
 package edu.uab.ccts.nlp.medics;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,19 +42,14 @@ import edu.uab.ccts.nlp.medics.util.MedicsConstants;
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 
-import org.apache.uima.examples.SourceDocumentInformation;
-
 /**
  * Writes the document obtained from the CollectionReader to the Medics Database
  * OracleCollectionReader does this when it is being used
- * FIXME - get rid of SourceDocumentation
  * @author AD\josborne
  *
  */
 public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
-	public final String PARAM_MEDICS_URL = "medicsConnectionString";
-	public final Integer MEDICS_NO_MRN_SENTINEL = -1;
-	public final Integer MEDICS_DOCUMENT_DEFAULT_VERSION= 1;
+	public static final String PARAM_MEDICS_URL = "medicsConnectionString";
 	public final Integer MEDICS_DOCUMENT_DEFAULT_DATE= 0;
 
 	public UimaContext uContext = null;
@@ -83,9 +77,11 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 		try {
 			uContext = aContext;
 			//medicsConnectionString = (String) aContext.getConfigParameterValue(ConfigurationSingleton.PARAM_MEDICS_URL);
-			aContext.getLogger().log(Level.CONFIG,"Medics Doc/Clob Writing URL is: "+medicsConnectionString+"\n");
-			Class.forName("oracle.jdbc.driver.OracleDriver");
-			InputStream stream = getContext().getResourceAsStream("clobsInsertSQL");
+			aContext.getLogger().log(Level.INFO,"Medics Doc/Clob Writing URL is: "+medicsConnectionString+"\n");
+
+			//Class.forName("oracle.jdbc.driver.OracleDriver");
+			//InputStream stream = getContext().getResourceAsStream("clobsInsertSQL");
+			InputStream stream = this.getClass().getClassLoader().getResourceAsStream("sql/oracle/insertDocument.sql");
 			BufferedReader br = new BufferedReader(new InputStreamReader(stream));
 			StringBuilder sb = new StringBuilder(20000);
 			while(br.ready()){
@@ -93,12 +89,18 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			}
 			insertSql=sb.toString();
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new ResourceInitializationException(e);
 		}
 	}
 
 
 
+	/**
+	 * @deprecated
+	 * @param con
+	 * @param logger
+	 */
 	public void close(Connection con, Logger logger){
 		try {
 			if (con != null) { con.close(); 
@@ -125,8 +127,9 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			analysisId=anal.getAnalysisID();
 			docsetId=Integer.parseInt(anal.getAnalysisDataSet());
 		} catch (Exception e){
-			uContext.getLogger().log(Level.WARNING,
-					"Could not determine the analysis_id or docsetId");
+			uContext.getLogger().log(Level.SEVERE,
+					"Could not determine the analysis_id or docsetId,"+
+			" use AnalysisAnnotator to set this!");
 		} 
 
 		try {
@@ -134,23 +137,24 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			Iterator<Annotation> medIter = medIndex.iterator();
 			thedoc = (NLP_Clobs) medIter.next();
 		} catch (Exception e) {
-			uContext.getLogger().log(Level.WARNING,
-					"No medics document/clob annotation in JCas, creating...");
-			thedoc = createDocAnnotation(jcas,anal,logger);
+			uContext.getLogger().log(Level.SEVERE,
+			"No medics document/clob annotation in JCas, use"+
+			" DocumentMetaDataAnnotator to create default MetaData!");
 		}
 
 		try {
 			if(thedoc.getReportID()!=0) {
 				uContext.getLogger().log(Level.INFO,
-						"Document with source id:"+thedoc.getSourceID()+" has been "+
-								"stored in medics database with ID:"+thedoc.getReportID()+", exiting...");
+				"Document with source id:"+thedoc.getSourceID()+" has been "+
+				"stored in medics database with ID:"+thedoc.getReportID()+
+				", exiting not updating...");
 				return;
 			} else {
-				uContext.getLogger().log(Level.INFO,
+				uContext.getLogger().log(Level.FINE,
 						"Document with source id:"+thedoc.getSourceID()+" has NOT been "+
 						"stored in medics database, writing..."); 
 				insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
-				convertString2Date(thedoc.getDateOfService()),thedoc.getSource(),
+				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
 				thedoc.getDocumentTypeAbbreviation(),thedoc.getDocumentSubType(),
 				null,thedoc.getDocumentVersion(), jcas.getDocumentText(),analysisId);
 			}
@@ -159,41 +163,6 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 		}
 		logger.log(Level.FINE,"Finished processing with MedicsCLOBsConsumer");
 	}
-
-
-	NLP_Clobs createDocAnnotation(JCas jcas,NLP_Analysis anal, Logger logger){
-		NLP_Clobs doc = new NLP_Clobs(jcas);
-		doc.setSourceID(setDocumentMetaInformationFromUri(jcas, anal));
-		doc.setMRN(MEDICS_NO_MRN_SENTINEL);
-		doc.setDocumentVersion(MEDICS_DOCUMENT_DEFAULT_VERSION);
-		doc.addToIndexes(jcas);
-		return doc;
-	}
-
-
-	/**
-	 * This can be overridden for populating document meta information from variable
-	 * format URI's
-	 * @param jcas
-	 * @param anal
-	 * @return
-	 */
-	protected String setDocumentMetaInformationFromUri(JCas jcas, NLP_Analysis anal) {
-		String sourceid = null;
-		FSIndex<Annotation> srcdocIndex = jcas.getAnnotationIndex(SourceDocumentInformation.type);
-		if(srcdocIndex!=null) {
-			Iterator<Annotation> srcdocIter = srcdocIndex.iterator();
-			sourceid = ((SourceDocumentInformation) srcdocIter.next()).getUri().trim();
-			if(sourceid.indexOf(File.separatorChar)!=-1){
-				sourceid=sourceid.substring(sourceid.lastIndexOf(File.separatorChar));
-			}
-		} else {
-			//Use URI
-			sourceid = jcas.getSofaDataURI().toString();
-		}
-		return sourceid;
-	}
-
 
 
 	/**
@@ -235,7 +204,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			insertdoc.setInt(1, thedoc.getReportID());
 			insertdoc.setClob(2, new StringReader(doctext));
 			insertdoc.setString(3, (new Integer(thedoc.getMRN())).toString());
-			insertdoc.setDate(4,convertString2Date(thedoc.getDateOfService()));
+			insertdoc.setDate(4,convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"));
 			insertdoc.setString(5, thedoc.getSource());
 			insertdoc.setString(6, thedoc.getDocumentTypeAbbreviation());
 			insertdoc.setString(7, thedoc.getDocumentSubType());
@@ -352,26 +321,35 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 
 
 
-	private static java.sql.Timestamp getCurrentTimestamp(){
+	private java.sql.Timestamp getCurrentTimestamp(){
 		java.util.Date today = new java.util.Date();
 		return new java.sql.Timestamp(today.getTime());		
 	}
 
-	private static java.sql.Date convertString2Date(String input_date) 
+
+	protected java.sql.Date convertStringToSqlDate(String input_date, String format) 
 			throws ParseException {
 		java.sql.Date sdate = null;
 		try {
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd"); 
+			DateFormat df = new SimpleDateFormat(format); 
 			java.util.Date date = df.parse(input_date);
 			sdate = new java.sql.Date(date.getTime());
 		} catch (ParseException pe) {
+			uContext.getLogger().log(Level.WARNING,"Failed to parse date:"+input_date+
+			"with format "+format);
+			pe.printStackTrace();
 			throw pe;
 		}
 		return sdate;
 	}
 	
+
 	
-	
-	
+	public static AnalysisEngineDescription createAnnotatorDescription(
+			String dbUrl) throws ResourceInitializationException {
+		return AnalysisEngineFactory.createEngineDescription(MedicsCLOBsConsumer.class,
+				PARAM_MEDICS_URL,
+				dbUrl);
+	}
 
 }

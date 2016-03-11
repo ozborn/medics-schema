@@ -1,13 +1,23 @@
 package edu.uab.ccts.nlp.medics;
 
+import java.io.File;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Iterator;
+
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.cas.FSIndex;
+import org.apache.uima.examples.SourceDocumentInformation;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 
+import edu.uab.ccts.nlp.medics.util.MedicsConstants;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 
 import org.slf4j.Logger;
@@ -87,31 +97,55 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
 		NLP_Clobs pprop =  new NLP_Clobs(jcas);
-		if(sourceIdentifier!=null) { 
-			pprop.setSourceID(sourceIdentifier); 
-		} else { 
-			parseDocumentMetaDataFromUrl(jcas,pprop);
-		}
+		setDefaultMetaData(jcas,pprop);
+		if(sourceIdentifier!=null) pprop.setSourceID(sourceIdentifier); 
 		if(patientIdentifier!=null) pprop.setMRN(Integer.parseInt(patientIdentifier));
 		if(documentCreationDate!=null) pprop.setDateOfService(documentCreationDate);
-		pprop.setDocumentTypeAbbreviation(type);
-		pprop.setDocumentSubType(subtype);
-		pprop.setDocumentVersion(version);
-		pprop.setSource(source);
+		if(type!=null) pprop.setDocumentTypeAbbreviation(type);
+		if(subtype!=null) pprop.setDocumentSubType(subtype);
+		if(version!=0) pprop.setDocumentVersion(version);
+		if(source!=null) pprop.setSource(source);
 		pprop.addToIndexes();
+		LOG.info("Finished setting document meta-data properties");
 		return;
 	}
 
 
-	//FIXME - Should inherit from this annotator and put in UAB NLP Clients
-	protected void parseDocumentMetaDataFromUrl(JCas jcas, NLP_Clobs metadoc) {
-		String uri_string =metadoc.getURI().toString();
-		LOG.info("Got uri string of:"+uri_string);
-		if(source.equals("Cerner PowerInsight") && type.equalsIgnoreCase("eeg")){
-			String[] fields = uri_string.split("_");
-			LOG.info("Got "+fields.length+" fields");
+	/**
+	 * This can be overridden for populating document meta information from variable
+	 * format URI's
+	 * @param jcas
+	 * @return the source id
+	 */
+	protected void setDefaultMetaData(JCas jcas, NLP_Clobs doc) {
+		doc.setMRN(MedicsConstants.MRN_ANONYMOUS_SENTINEL_VALUE);
+		doc.setDocumentVersion(MedicsConstants.MEDICS_DOCUMENT_DEFAULT_VERSION);
+
+		String sourceid = null;
+		FSIndex<Annotation> srcdocIndex = jcas.getAnnotationIndex(SourceDocumentInformation.type);
+		if(srcdocIndex!=null) {
+			Iterator<Annotation> srcdocIter = srcdocIndex.iterator();
+			sourceid = ((SourceDocumentInformation) srcdocIter.next()).getUri().trim();
+			if(sourceid.indexOf(File.separatorChar)!=-1){
+				sourceid=sourceid.substring(sourceid.lastIndexOf(File.separatorChar));
+			}
+			doc.setSourceID(sourceid);
+		} else {
+			doc.setSourceID(jcas.getSofaDataURI().toString());
 		}
-		metadoc.setSourceID(metadoc.getURI().toString());
+	}
+
+	
+	public java.util.Date convertStringToJavaDate(String input_date, String format) 
+			throws ParseException {
+		java.util.Date date = null;
+		try {
+			DateFormat df = new SimpleDateFormat(format); 
+			date = df.parse(input_date);
+		} catch (ParseException pe) {
+			throw pe;
+		}
+		return date;
 	}
 
 
