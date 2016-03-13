@@ -19,6 +19,7 @@ import java.sql.SQLRecoverableException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.uima.UimaContext;
@@ -31,6 +32,7 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.util.AnalysisEngineUtils;
 import org.apache.uima.util.InvalidXMLException;
 
 import org.apache.uima.util.Level;
@@ -125,11 +127,12 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			Iterator<Annotation> analIter = analIndex.iterator();
 			anal = (NLP_Analysis) analIter.next();
 			analysisId=anal.getAnalysisID();
-			docsetId=Integer.parseInt(anal.getAnalysisDataSet());
+			if(anal.getAnalysisDataSet()!=null) docsetId=Integer.parseInt(anal.getAnalysisDataSet());
 		} catch (Exception e){
 			uContext.getLogger().log(Level.SEVERE,
 					"Could not determine the analysis_id or docsetId,"+
 			" use AnalysisAnnotator to set this!");
+			throw new AnalysisEngineProcessException(e);
 		} 
 
 		try {
@@ -138,8 +141,9 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			thedoc = (NLP_Clobs) medIter.next();
 		} catch (Exception e) {
 			uContext.getLogger().log(Level.SEVERE,
-			"No medics document/clob annotation in JCas, use"+
+			"No medics document/clob annotation in "+jcas.getViewName()+", use"+
 			" DocumentMetaDataAnnotator to create default MetaData!");
+			throw new AnalysisEngineProcessException(e);
 		}
 
 		try {
@@ -332,9 +336,10 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 		java.sql.Date sdate = null;
 		try {
 			DateFormat df = new SimpleDateFormat(format); 
-			java.util.Date date = df.parse(input_date);
+			java.util.Date date = new Date(0);
+			if(input_date!=null) date = df.parse(input_date);
 			sdate = new java.sql.Date(date.getTime());
-		} catch (ParseException pe) {
+		} catch (Exception pe) {
 			uContext.getLogger().log(Level.WARNING,"Failed to parse date:"+input_date+
 			"with format "+format);
 			pe.printStackTrace();

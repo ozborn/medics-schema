@@ -35,5 +35,5 @@ public class MedicsConstants {
 	
 	public static final int MRN_ANONYMOUS_SENTINEL_VALUE=0;
 	public static final int MEDICS_DOCUMENT_DEFAULT_VERSION= 1;
-	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 1;
+	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 0;
 }

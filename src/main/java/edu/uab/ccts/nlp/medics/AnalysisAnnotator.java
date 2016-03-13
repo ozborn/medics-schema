@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
@@ -14,8 +15,15 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.util.Level;
+import org.apache.uima.util.Logger;
+
+import edu.uab.ccts.nlp.medics.util.MedicsConstants;
+
+/*
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+ */
 
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 
@@ -26,7 +34,10 @@ import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
  *
  */
 public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
-	private static final Logger LOG  = LoggerFactory.getLogger(AnalysisAnnotator.class);
+
+	//Causing double initialization of AnalysisAnnotator?
+	//private final Logger LOG  = LoggerFactory.getLogger(AnalysisAnnotator.class);
+	private Logger log;
 
 	public static final String PARAM_ANALYSIS_TYPE = "analysisType";
 	public static final String PARAM_ANALYSIS_ID = "analysisID";
@@ -36,8 +47,10 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 	@ConfigurationParameter(
 			name = PARAM_ANALYSIS_ID,
 			mandatory = false,
-			description = "input analysis id, negative results used to indicate certain analysis, now use analysis type ")
-	int analysisID = 0;
+			description = "input analysis id, negative results used to indicate certain analysis, now use analysis type "
+			//,defaultValue = "0" //Does not work?
+			)
+	int analysisID;
 
 	static final String ANALYSIS_TYPE_DESCRIPTION
 	= "Type of analysis being run, see Medics Type System (MedicsConstants) for options";
@@ -45,36 +58,45 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 			name = PARAM_ANALYSIS_TYPE,
 			mandatory = false,
 			description = ANALYSIS_TYPE_DESCRIPTION)
-	int analysisType = 0;
+	private Integer analysisType;
 
 	@ConfigurationParameter(
 			name = PARAM_MEDICSURL,
 			mandatory = false,
 			description = "Medics database to write analysis progress"
 			)
-	String medicsConnectionString = null;
+	private String medicsConnectionString = null;
+
+
+	public void initialize(UimaContext aContext) throws ResourceInitializationException {
+		super.initialize(aContext);
+		log = aContext.getLogger();
+		log.log(Level.INFO,"Medics URL initialized to:"+medicsConnectionString);
+		log.log(Level.INFO,"Analysis ID initialized to:"+analysisID);
+	}
 
 
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
-		LOG.info("Medics URL is:"+medicsConnectionString);
 		NLP_Analysis nlpan = new NLP_Analysis(jcas);
+		if(analysisID==MedicsConstants.DEFAULT_ANALYSIS_SENTINEL_VALUE){
+			insertAnalysis(nlpan);
+		}
 		nlpan.setAnalysisID(analysisID);
 		nlpan.setMedicsURL(medicsConnectionString);
 		nlpan.setAnalysisType(analysisType);
 		nlpan.addToIndexes(jcas);
-		insertAnalysis(nlpan);
-		LOG.info("Wrote analysis to "+jcas.getViewName()+" of type "+analysisType);
+		log.log(Level.INFO,"Wrote analysis "+analysisID+" to "
+		+jcas.getViewName()+" of type "+analysisType);
 	}
 
 
-	Integer insertAnalysis(NLP_Analysis nlpanal) {
-		Integer generatedAnalysisID = null;
+	private void insertAnalysis(NLP_Analysis nlpanal) {
 		String insertTableSQL = "INSERT INTO NLP_ANALYSIS"
 				+ "(  ANALYSIS_TYPE, ANALYSIS_SOFTWARE, "+
 				"ANALYSIS_START_DATE , "+
 				" MACHINE "+
-				") VALUES (?,?,SYSDATE,?,?,?,?,?)  ";
+				") VALUES (?,?,SYSDATE,?)  ";
 		try (
 				Connection conn =  DriverManager.getConnection(medicsConnectionString);
 				PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, 
@@ -86,7 +108,8 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 			try {
 				preparedStatement.setString(3, InetAddress.getLocalHost().getHostName() );
 			} catch (UnknownHostException e) {
-				preparedStatement.setString(7, "InetAddress.getLocalHost().getHostName " + e.getMessage());
+				preparedStatement.setString(3, "Unknown host");
+				log.log(Level.WARNING,"InetAddress.getLocalHost().getHostName " + e.getMessage());
 			}
 			preparedStatement.executeUpdate();
 			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()){
@@ -101,7 +124,6 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return generatedAnalysisID;
 	}
 
 
