@@ -58,11 +58,10 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			description = "Source of document, ex) icda, cflo, semeval")
 	protected String source = null;
 
-
 	@ConfigurationParameter(
 			name = PARAM_SOURCE_IDENTIFIER,
 			mandatory = false,
-			description = "Document version")
+			description = "Source Identifier, perhaps a URL or database primary key")
 	protected String sourceIdentifier = null;
 
 	@ConfigurationParameter(
@@ -98,7 +97,6 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		if(version!=MedicsConstants.DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE){
 			pprop.setDocumentVersion(version);
 		}
-		if(sourceIdentifier!=null) pprop.setSourceID(sourceIdentifier); 
 		if(patientIdentifier!=null) pprop.setMRN(Integer.parseInt(patientIdentifier));
 		if(documentCreationDate!=null) pprop.setDateOfService(documentCreationDate);
 		if(type!=null) pprop.setDocumentTypeAbbreviation(type);
@@ -108,7 +106,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		LOG.info("Finished setting document meta-data properties to view "+jcas.getViewName());
 		return;
 	}
-	
+
 
 
 	/**
@@ -119,18 +117,24 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	 */
 	public void guessSourceId(JCas jcas, NLP_Clobs doc) throws AnalysisEngineProcessException {
 		if(sourceIdentifier==null) {
+			LOG.info("No Source identifier provided");
 			try {
 				if(jcas.getSofaDataURI()!=null) {
 					doc.setSourceID(jcas.getSofaDataURI().toString());
 				} else {
 					JCas uriview = jcas.getView("UriView");
 					if(uriview!=null){
-						doc.setSourceID(uriview.getSofaDataURI().toString());
+						sourceIdentifier = uriview.getSofaDataURI().toString();
+						doc.setSourceID(sourceIdentifier);
+						LOG.info(sourceIdentifier+" source id set");
 					}
 				}
 			} catch (CASException e) {
 				LOG.warn("Could not determine source identifier");
 			}
+		} else {
+			LOG.info("Source identifier "+sourceIdentifier+" was provided");
+			doc.setSourceID(sourceIdentifier); 
 		}
 	}
 

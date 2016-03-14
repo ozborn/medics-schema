@@ -97,7 +97,7 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		super.initialize(aContext);
 		log = aContext.getLogger();
 		log.log(Level.INFO,"Medics URL initialized to:"+medicsConnectionString);
-		log.log(Level.INFO,"Analysis ID initialized to:"+analysisID);
+		log.log(Level.INFO,"Analysis Description initialized to:"+analysisDescription);
 	}
 
 
@@ -105,6 +105,10 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
 		try {
 		NLP_Analysis nlpan = new NLP_Analysis(jcas);
+		nlpan.setMedicsURL(medicsConnectionString);
+		nlpan.setAnalysisDescription(analysisDescription);
+		nlpan.setAnalysisType(analysisType);
+		nlpan.setAnalysisSoftware(analysisSoftware);
 		if(analysisID==MedicsConstants.DEFAULT_ANALYSIS_SENTINEL_VALUE){
 			insertAnalysis(nlpan);
 		}
@@ -112,10 +116,6 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		nlpan.setAnalysisDataSet(docSetId);
 		nlpan.setDocumentSource(documentDescription);
 		nlpan.setAnalysisID(analysisID);
-		nlpan.setMedicsURL(medicsConnectionString);
-		nlpan.setAnalysisType(analysisType);
-		nlpan.setAnalysisSoftware(analysisSoftware);
-		if(analysisDescription!=null) nlpan.setAnalysisDescription(analysisDescription);
 		nlpan.addToIndexes(jcas);
 		log.log(Level.INFO,"Wrote analysis "+analysisID+" to "
 				+jcas.getViewName()+" of type "+analysisType);
@@ -250,7 +250,7 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 
 
 	public static AnalysisEngineDescription createAnnotatorDescription(int id, int type, 
-			String url, String software, String docsetDescription) throws ResourceInitializationException {
+			String url, String software, String aDescription, String docsetDescription) throws ResourceInitializationException {
 		return AnalysisEngineFactory.createEngineDescription(AnalysisAnnotator.class,
 				PARAM_ANALYSIS_ID,
 				id,
@@ -260,6 +260,8 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 				url,
 				PARAM_ANALYSIS_SOFTWARE,
 				software,
+				PARAM_ANALYSIS_DESCRIPTION,
+				aDescription,
 				PARAM_DOCUMENT_SOURCE,
 				docsetDescription
 				);
