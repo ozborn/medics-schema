@@ -561,6 +561,13 @@ public class LegacyMedicsTools {
 	}
 	
 	
+	/**
+	 * @deprecated
+	 * @param conn
+	 * @param doc_set_description
+	 * @return
+	 * @throws SQLException
+	 */
 	public static int InsertDocSet(Connection conn, String doc_set_description
 			) throws SQLException {
 		int docSetID = -1;
@@ -698,6 +705,14 @@ public class LegacyMedicsTools {
 
 
 
+	/**
+	 * Connection recycled for speed
+	 * @param conn
+	 * @param doc_id
+	 * @param analysis_id
+	 * @param status
+	 * @throws SQLException
+	 */
 	public static void insertDocumentHistory(Connection conn, int doc_id,
 			int analysis_id, int status) throws SQLException {
 
@@ -718,6 +733,15 @@ public class LegacyMedicsTools {
 		}
 	}
 
+	/**
+	 * 
+	 * Connection recycled for speed
+	 * @param conn
+	 * @param docset_id
+	 * @param document_id
+	 * @param doc_mrn
+	 * @throws SQLException
+	 */
 	public static void insertDocumentDocSetMap(Connection conn, int docset_id, int document_id,
 			String doc_mrn) throws SQLException {
 

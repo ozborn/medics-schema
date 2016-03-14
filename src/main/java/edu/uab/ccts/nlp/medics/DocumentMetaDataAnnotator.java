@@ -49,7 +49,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			name = PARAM_VERSION,
 			mandatory = false,
 			description = "Document version")
-	protected int version = 0;
+	protected int version;
 
 
 	@ConfigurationParameter(
@@ -93,18 +93,22 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
 		NLP_Clobs pprop =  new NLP_Clobs(jcas);
-		setDefaultMetaData(jcas,pprop);
+		guessSourceId(jcas,pprop);
+		pprop.setMRN(MedicsConstants.DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE);
+		if(version!=MedicsConstants.DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE){
+			pprop.setDocumentVersion(version);
+		}
 		if(sourceIdentifier!=null) pprop.setSourceID(sourceIdentifier); 
 		if(patientIdentifier!=null) pprop.setMRN(Integer.parseInt(patientIdentifier));
 		if(documentCreationDate!=null) pprop.setDateOfService(documentCreationDate);
 		if(type!=null) pprop.setDocumentTypeAbbreviation(type);
 		if(subtype!=null) pprop.setDocumentSubType(subtype);
-		if(version!=0) pprop.setDocumentVersion(version);
 		if(source!=null) pprop.setSource(source);
 		pprop.addToIndexes();
 		LOG.info("Finished setting document meta-data properties to view "+jcas.getViewName());
 		return;
 	}
+	
 
 
 	/**
@@ -113,23 +117,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	 * @param jcas
 	 * @return the source id
 	 */
-	protected void setDefaultMetaData(JCas jcas, NLP_Clobs doc) throws AnalysisEngineProcessException {
-		doc.setMRN(MedicsConstants.MRN_ANONYMOUS_SENTINEL_VALUE);
-		doc.setDocumentVersion(MedicsConstants.MEDICS_DOCUMENT_DEFAULT_VERSION);
-		/*
-		String sourceid = null;
-		FSIndex<Annotation> srcdocIndex = jcas.getAnnotationIndex(SourceDocumentInformation.type);
-		if(srcdocIndex!=null) {
-			Iterator<Annotation> srcdocIter = srcdocIndex.iterator();
-			sourceid = ((SourceDocumentInformation) srcdocIter.next()).getUri().trim();
-			if(sourceid.indexOf(File.separatorChar)!=-1){
-				sourceid=sourceid.substring(sourceid.lastIndexOf(File.separatorChar));
-			}
-			doc.setSourceID(sourceid);
-		} else {
-			doc.setSourceID(jcas.getSofaDataURI().toString());
-		}
-		 */
+	public void guessSourceId(JCas jcas, NLP_Clobs doc) throws AnalysisEngineProcessException {
 		if(sourceIdentifier==null) {
 			try {
 				if(jcas.getSofaDataURI()!=null) {

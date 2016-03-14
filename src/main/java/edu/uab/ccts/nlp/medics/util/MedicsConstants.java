@@ -33,7 +33,7 @@ public class MedicsConstants {
 	public static final int DOCUMENT_DATABASE_WRITE_FAIL=15; // Failed to write document to Medics Database
 	public static final int DOCUMENT_DATABASE_WRITE_SUCCESS=16; // Wrote document to Medics NLP_DOCS
 	
-	public static final int MRN_ANONYMOUS_SENTINEL_VALUE=0;
-	public static final int MEDICS_DOCUMENT_DEFAULT_VERSION= 1;
+	public static final int DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE=0;
+	public static final int DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE= 0;
 	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 0;
 }

@@ -331,12 +331,14 @@ beth, partners or test</description>
         </featureDescription>
         <featureDescription>
           <name>AnalysisDataSet</name>
-          <description>Should be integer now.</description>
-          <rangeTypeName>uima.cas.String</rangeTypeName>
+          <description>Should be integer now. This is the documentSetIdentifier in
+medics</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>DocumentSource</name>
-          <description>Long form text description of the selection criteria for these documents.</description>
+          <description>Long form text description of the selection criteria for these documents.
+This is the name of the document set.</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
@@ -382,6 +384,11 @@ beth, partners or test</description>
         <featureDescription>
           <name>UMLSConnectionString</name>
           <description>Connection string to connect to a locate Oracle instance of UMLS</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>AnalysisDescription</name>
+          <description>A description of the analysis provided by the client, otherwise a default description is used.</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
       </features>

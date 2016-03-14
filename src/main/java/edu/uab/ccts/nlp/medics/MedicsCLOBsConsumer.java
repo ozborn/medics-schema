@@ -1,7 +1,6 @@
 package edu.uab.ccts.nlp.medics;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -15,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLRecoverableException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,8 +30,6 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.util.AnalysisEngineUtils;
-import org.apache.uima.util.InvalidXMLException;
 
 import org.apache.uima.util.Level;
 import org.apache.uima.util.Logger;
@@ -45,7 +41,8 @@ import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 
 /**
- * Writes the document obtained from the CollectionReader to the Medics Database
+ * Writes NLP_Clobs to Medics database. If it fails (document present)
+ * it updates NLP_Clobs with the document identifier in Medics
  * OracleCollectionReader does this when it is being used
  * @author AD\josborne
  *
@@ -67,13 +64,6 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 	private String medicsConnectionString = null;
 
 
-	public static AnalysisEngineDescription createAnnotatorDescription() 
-			throws InvalidXMLException, IOException, ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(
-				MedicsCLOBsConsumer.class);
-	}
-
-
 	public void initialize(UimaContext aContext) throws ResourceInitializationException {
 		super.initialize(aContext);
 		try {
@@ -81,7 +71,6 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			//medicsConnectionString = (String) aContext.getConfigParameterValue(ConfigurationSingleton.PARAM_MEDICS_URL);
 			aContext.getLogger().log(Level.INFO,"Medics Doc/Clob Writing URL is: "+medicsConnectionString+"\n");
 
-			//Class.forName("oracle.jdbc.driver.OracleDriver");
 			//InputStream stream = getContext().getResourceAsStream("clobsInsertSQL");
 			InputStream stream = this.getClass().getClassLoader().getResourceAsStream("sql/oracle/insertDocument.sql");
 			BufferedReader br = new BufferedReader(new InputStreamReader(stream));
@@ -91,30 +80,13 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			}
 			insertSql=sb.toString();
 		} catch (Exception e) {
-			e.printStackTrace();
+			aContext.getLogger().log(Level.SEVERE,
+			"Can not instanitate MedicsCLOBsConsumer, bad path to sql?"+e.getMessage());
 			throw new ResourceInitializationException(e);
 		}
 	}
 
 
-
-	/**
-	 * @deprecated
-	 * @param con
-	 * @param logger
-	 */
-	public void close(Connection con, Logger logger){
-		try {
-			if (con != null) { con.close(); 
-			} else {
-				uContext.getLogger().log(Level.WARNING,"No medicsConnectionString Connection to close");
-			}
-		} catch (Exception e) {
-			logger.log(Level.SEVERE,"Exception CLOSING connection to "+
-					PARAM_MEDICS_URL+" to write extended hits.");
-			e.printStackTrace();
-		}
-	}
 
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
@@ -127,7 +99,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			Iterator<Annotation> analIter = analIndex.iterator();
 			anal = (NLP_Analysis) analIter.next();
 			analysisId=anal.getAnalysisID();
-			if(anal.getAnalysisDataSet()!=null) docsetId=Integer.parseInt(anal.getAnalysisDataSet());
+			docsetId=anal.getAnalysisDataSet();
 		} catch (Exception e){
 			uContext.getLogger().log(Level.SEVERE,
 					"Could not determine the analysis_id or docsetId,"+
@@ -157,10 +129,11 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				uContext.getLogger().log(Level.FINE,
 						"Document with source id:"+thedoc.getSourceID()+" has NOT been "+
 						"stored in medics database, writing..."); 
-				insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
+				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
 				thedoc.getDocumentTypeAbbreviation(),thedoc.getDocumentSubType(),
-				null,thedoc.getDocumentVersion(), jcas.getDocumentText(),analysisId);
+				null,thedoc.getDocumentVersion(), jcas.getDocumentText());
+				thedoc.setReportID(docid);
 			}
 		} catch (Exception e) {
 			throw(new AnalysisEngineProcessException(e));
@@ -169,93 +142,15 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 	}
 
 
-	/**
-	 * @deprecated
-	 * @param doctext
-	 * @param thedoc
-	 * @param logger
-	 * @param mcon
-	 * @throws AnalysisEngineProcessException
-	 */
-	public void writeDocument(String doctext,NLP_Clobs thedoc,
-			Logger logger, JCas jcas) 
-					throws AnalysisEngineProcessException {
-		PreparedStatement insertdoc = null;
-		Connection mcon = null;
-		String md5sum="";
-		try {
-			try {
-				mcon =  DriverManager.getConnection(medicsConnectionString);
-			} catch (SQLRecoverableException e) {
-				String cp = System.getProperty("java.class.path");
-				logger.log(Level.WARNING,"Recoverable exception getting connection to "+
-						medicsConnectionString+" , trying again to write extended CLOBS with classpath"+cp);
-				Thread.sleep(1000);
-				mcon =  DriverManager.getConnection(medicsConnectionString);
-			} catch (Exception e) {
-				String cp = System.getProperty("java.class.path");
-				logger.log(Level.SEVERE,"Not recoverable exception getting connection to "+
-						medicsConnectionString+" to write extended CLOBS with classpath"+cp);
-				throw(new AnalysisEngineProcessException(e));
-			}
-			MessageDigest algorithm = MessageDigest.getInstance("MD5");
-			algorithm.reset();
-			algorithm.update(doctext.getBytes("UTF-8")); //Close enough to Oracle AL32UTF8
-			byte[] md5bytes = algorithm.digest();
-			BigInteger bigint = new BigInteger(1,md5bytes);
-			md5sum = bigint.toString(16);
-			insertdoc = mcon.prepareStatement(insertSql);
-			insertdoc.setInt(1, thedoc.getReportID());
-			insertdoc.setClob(2, new StringReader(doctext));
-			insertdoc.setString(3, (new Integer(thedoc.getMRN())).toString());
-			insertdoc.setDate(4,convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"));
-			insertdoc.setString(5, thedoc.getSource());
-			insertdoc.setString(6, thedoc.getDocumentTypeAbbreviation());
-			insertdoc.setString(7, thedoc.getDocumentSubType());
-			insertdoc.setInt(8, thedoc.getDocumentVersion());
-			insertdoc.setTimestamp(9, getCurrentTimestamp());
-			insertdoc.setString(10, thedoc.getSourceID());
-			insertdoc.setString(11, md5sum);
-			insertdoc.setInt(12, analysisId);
-			insertdoc.addBatch();
-			insertdoc.executeBatch();
-			if(insertdoc!=null) insertdoc.close();
-
-		} catch (java.sql.BatchUpdateException bue) {
-			if(bue.getMessage()!=null && bue.getMessage().indexOf("_PK) violated")!=-1) {
-				logger.log(Level.WARNING,thedoc.getReportID()+" with md5sum ("+
-						md5sum+") already exists in medics.NLP_CLOBS");
-			}
-		} catch (Exception e) {
-			logger.log(Level.SEVERE,"Failed to write document with id "+thedoc.getReportID()+
-					" and md5sum ("+md5sum+")");
-			try {
-				LegacyMedicsTools.updateDocumentHistory(mcon,
-						thedoc.getReportID(), analysisId, MedicsConstants.DOCUMENT_DATABASE_WRITE_FAIL);
-			} catch (Exception wf) {
-				wf.printStackTrace();
-				logger.log(Level.SEVERE,thedoc.getReportID()+" could not update document history");
-			}
-		} finally { 
-			close(mcon,logger); 
-		}
-	}
-
 	private int insertDocument(Logger logger, String source_id,
 			String mrn,java.sql.Date dn_update_datetime, String source,
 			String type, String subtype, String mimetype, Integer version,
-			String converted_doc,int analysis_id)
+			String converted_doc)
 					throws SQLException, NoSuchAlgorithmException, UnsupportedEncodingException {
 		int documentIdentifier = -1;
 		if(mimetype==null) mimetype="text";
 		String md5sum ="";
 		MessageDigest algorithm;
-		/*
-		String insertTableSQL = "INSERT INTO NLP_DOCS"
-				+" (NC_SOURCE_ID,NC_PT_MRN,NC_DOS,NC_SOURCE,NC_TYPE,NC_SUBTYPE,"+
-				"NC_VERSION, NC_CLCONT, NC_MD5_DOC_HASH, NC_IMPORT_ANALYSIS,NC_MEDICS_ARRIVAL_TIME) "+
-				"VALUES (?,?,?,?,?,?,?,?,?,?,SYSDATE) ";
-		*/
 		String doc_metadata = "document source id:"+source_id+
 				" from source "+source+" with version "+version;
 		try (
@@ -280,12 +175,15 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			preparedStatement.setInt(7, version );
 			preparedStatement.setClob(8, new StringReader(converted_doc));
 			preparedStatement.setString(9, md5sum );
-			preparedStatement.setInt(10, analysis_id );
+			preparedStatement.setInt(10, analysisId );
+			preparedStatement.setTime(11, getCurrentTime() );
 			preparedStatement.executeUpdate();
 			ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
 			generatedKeys.next();
 			documentIdentifier = generatedKeys.getInt(1);
 			generatedKeys.close();
+			LegacyMedicsTools.insertDocumentHistory(conn,documentIdentifier,analysisId,1);
+			LegacyMedicsTools.insertDocumentDocSetMap(conn,docsetId,documentIdentifier,mrn);
 		} catch (SQLIntegrityConstraintViolationException sql_integrity) {
 			//Trying to insert duplicate document
 			try (
@@ -325,9 +223,13 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 
 
 
-	private java.sql.Timestamp getCurrentTimestamp(){
+	/**
+	 * May need this if doing 
+	 * @return
+	 */
+	private java.sql.Time getCurrentTime(){
 		java.util.Date today = new java.util.Date();
-		return new java.sql.Timestamp(today.getTime());		
+		return new java.sql.Time(today.getTime());		
 	}
 
 
