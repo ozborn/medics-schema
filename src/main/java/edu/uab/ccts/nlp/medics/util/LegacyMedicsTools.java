@@ -562,7 +562,6 @@ public class LegacyMedicsTools {
 	
 	
 	/**
-	 * @deprecated
 	 * @param conn
 	 * @param doc_set_description
 	 * @return

@@ -1,9 +1,5 @@
 package edu.uab.ccts.nlp.medics;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;
@@ -37,6 +33,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	public static final String PARAM_SUBTYPE = "subtype";
 	public static final String PARAM_DOCUMENT_CREATION_DATE = "documentCreationDate";
 	public static final String PARAM_DOCSET_ID = "docSetID";
+	public static final String PARAM_IMPORT_ANALYSIS_ID = "importAnalysisId";
 
 	//UIMA-FIT Parameter Assignment
 	@ConfigurationParameter(
@@ -88,6 +85,12 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			description = "Document version")
 	protected int docsetId= 0;
 
+	@ConfigurationParameter(
+			name = PARAM_IMPORT_ANALYSIS_ID,
+			mandatory = false,
+			description = "Import analysis that generated this document.")
+	protected int importAnalysisId;
+
 
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
@@ -102,6 +105,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		if(type!=null) pprop.setDocumentTypeAbbreviation(type);
 		if(subtype!=null) pprop.setDocumentSubType(subtype);
 		if(source!=null) pprop.setSource(source);
+		pprop.setImportAnalysis(importAnalysisId);
 		pprop.addToIndexes();
 		LOG.info("Finished setting document meta-data properties to view "+jcas.getViewName());
 		return;
@@ -139,28 +143,18 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	}
 
 
-	public java.util.Date convertStringToJavaDate(String input_date, String format) 
-			throws ParseException {
-		java.util.Date date = null;
-		try {
-			DateFormat df = new SimpleDateFormat(format); 
-			date = df.parse(input_date);
-		} catch (ParseException pe) {
-			throw pe;
-		}
-		return date;
-	}
-
 
 	public static AnalysisEngineDescription createAnnotatorDescription(
-			String type, int ver, String src ) throws ResourceInitializationException {
+			String type, int ver, String src, int importId ) throws ResourceInitializationException {
 		return AnalysisEngineFactory.createEngineDescription(DocumentMetaDataAnnotator.class,
 				PARAM_TYPE,
 				type,
 				PARAM_VERSION,
 				ver,
 				PARAM_SOURCE,
-				src
+				src,
+				PARAM_IMPORT_ANALYSIS_ID,
+				importId
 				);
 	}
 

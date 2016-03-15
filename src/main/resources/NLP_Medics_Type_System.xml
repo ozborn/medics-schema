@@ -33,7 +33,8 @@ Now includes support for the NLP_ENTITY* tables</description>
         </featureDescription>
         <featureDescription>
           <name>DateOfService</name>
-          <description>No date features appears to be present in UIMA, using String. Should be stored in Oracle date format.</description>
+          <description>No date features appears to be present in UIMA, using String. 
+Should be stored in ISO/Oracle date format of YYYY-MM-dd</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>

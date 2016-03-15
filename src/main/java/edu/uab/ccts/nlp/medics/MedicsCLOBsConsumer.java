@@ -130,7 +130,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 						"Document with source id:"+thedoc.getSourceID()+" has NOT been "+
 						"stored in medics database, writing..."); 
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
-				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
+				convertStringToSqlDate(thedoc.getDateOfService(),"YYYY-MM-dd"),thedoc.getSource(),
 				thedoc.getDocumentTypeAbbreviation(),thedoc.getDocumentSubType(),
 				null,thedoc.getDocumentVersion(), jcas.getDocumentText());
 				thedoc.setReportID(docid);

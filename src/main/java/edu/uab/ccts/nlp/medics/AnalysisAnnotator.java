@@ -1,13 +1,5 @@
 package edu.uab.ccts.nlp.medics;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -19,13 +11,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 import org.apache.uima.util.Logger;
 
-import edu.uab.ccts.nlp.medics.util.MedicsConstants;
-
-/*
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
- */
-
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 
 /**
@@ -36,16 +21,18 @@ import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
  */
 public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 
-	//Causing double initialization of AnalysisAnnotator?
-	//private final Logger LOG  = LoggerFactory.getLogger(AnalysisAnnotator.class);
 	private Logger log;
 
 	public static final String PARAM_ANALYSIS_TYPE = "analysisType";
 	public static final String PARAM_ANALYSIS_DESCRIPTION = "analysisDescription";
 	public static final String PARAM_ANALYSIS_SOFTWARE = "analysisSoftware";
+	public static final String PARAM_ANALYSIS_SOFTWARE_VERSION = "analysisSoftwareVersion";
 	public static final String PARAM_ANALYSIS_ID = "analysisID";
 	public static final String PARAM_DOCUMENT_SOURCE = "documentSource";
+	public static final String PARAM_DOCSET_ID = "docSetId";
 	public static final String PARAM_MEDICSURL = "medicsConnectionString";
+	
+	public static final String APPLICATION_PROPERTIES_PATH="application.properties";
 
 	//UIMA-FIT Parameter Assignment
 	@ConfigurationParameter(
@@ -54,6 +41,11 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 			description = "Analysis Software")
 	String analysisSoftware;
 
+	@ConfigurationParameter(
+			name = PARAM_ANALYSIS_SOFTWARE_VERSION,
+			mandatory = false,
+			description = "Analysis Software Version")
+	String analysisSoftwareVersion;
 
 	@ConfigurationParameter(
 			name = PARAM_ANALYSIS_ID,
@@ -62,6 +54,15 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 			//,defaultValue = "0" //Does not work?
 			)
 	int analysisID;
+	
+	@ConfigurationParameter(
+			name = PARAM_DOCSET_ID,
+			mandatory = false,
+			description = "input docset id, inserted by client"
+			//,defaultValue = "0" //Does not work?
+			)
+	int docSetId;
+
 
 	static final String ANALYSIS_TYPE_DESCRIPTION
 	= "Type of analysis being run, see Medics Type System (MedicsConstants) for options";
@@ -109,12 +110,16 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		nlpan.setAnalysisDescription(analysisDescription);
 		nlpan.setAnalysisType(analysisType);
 		nlpan.setAnalysisSoftware(analysisSoftware);
+		nlpan.setAnalysisSoftwareVersion(analysisSoftwareVersion);
+		nlpan.setDocumentSource(documentDescription);
+		/*
+		int docSetId = insertDocSet(documentDescription);
+		nlpan.setAnalysisDataSet(docSetId);
 		if(analysisID==MedicsConstants.DEFAULT_ANALYSIS_SENTINEL_VALUE){
 			insertAnalysis(nlpan);
 		}
-		int docSetId = insertDocSet(documentDescription);
+		*/
 		nlpan.setAnalysisDataSet(docSetId);
-		nlpan.setDocumentSource(documentDescription);
 		nlpan.setAnalysisID(analysisID);
 		nlpan.addToIndexes(jcas);
 		log.log(Level.INFO,"Wrote analysis "+analysisID+" to "
@@ -122,13 +127,13 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		} catch (Exception e) { throw new AnalysisEngineProcessException(e); }
 	}
 
-
+/*
 	private void insertAnalysis(NLP_Analysis nlpanal) {
 		String insertTableSQL = "INSERT INTO NLP_ANALYSIS"
 				+ "(  ANALYSIS_TYPE, ANALYSIS_SOFTWARE, "+
-				" ANALYSIS_DESCRIPTION, MACHINE, "+
-				"ANALYSIS_START_DATE "+
-				") VALUES (?,?,?,?,SYSDATE)  ";
+				" ANALYSIS_DESCRIPTION, MACHINE, ANALYSIS_DATASET, ANALYSIS_SOFTWARE_VERSION"+
+				",ANALYSIS_START_DATE "+
+				") VALUES (?,?,?,?,?,?,SYSDATE)  ";
 		try (
 				Connection conn =  DriverManager.getConnection(medicsConnectionString);
 				PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, 
@@ -136,6 +141,7 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 				)
 		{
 			preparedStatement.setString(1, String.valueOf(nlpanal.getAnalysisType()));
+			log.log(Level.FINER,"Using software "+nlpanal.getAnalysisSoftware());
 			preparedStatement.setString(2, nlpanal.getAnalysisSoftware() );
 			preparedStatement.setString(3, nlpanal.getAnalysisDescription() );
 			try {
@@ -144,6 +150,9 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 				preparedStatement.setString(4, "Unknown host");
 				log.log(Level.WARNING,"InetAddress.getLocalHost().getHostName " + e.getMessage());
 			}
+			preparedStatement.setInt(5, nlpanal.getAnalysisDataSet() );
+			log.log(Level.FINER,"Using software version "+nlpanal.getAnalysisSoftwareVersion());
+			preparedStatement.setString(6, nlpanal.getAnalysisSoftwareVersion() );
 			preparedStatement.executeUpdate();
 			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()){
 				if (generatedKeys.next()) {
@@ -152,105 +161,22 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 					throw new Exception("Creating NLP_ANALYSIS, no generated key obtained.");
 				}
 			} catch (Exception e) {
+				log.log(Level.WARNING,"Failed to insert analysis run with "+analysisSoftware+
+				" version "+analysisSoftwareVersion+" on docset:"+nlpanal.getAnalysisDataSet());
 				throw e;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+*/
 
 
-
-	private String getAnalysisDescription(int type) {
-		String pipelineString = null;
-		return pipelineString;
-
-		/*
-		if(analysisType==ConfigurationSingleton.PATH_REPORT_ANALYSIS_ID) {
-			docsetdesc = "ICDA PTH Notes signed from ";
-			analysisdesc = "Cancer Pipeline on ICDA PTH Notes signed on ";
-			pipelinestring = "CancerDetectionPipeline";
-			if(comparisonDate==null || comparisonDate.isEmpty()) {
-				docsetdesc+=LegacyMedicsTools.getDaysAgoDateString(daybackoffset);
-				analysisdesc+=LegacyMedicsTools.getDaysAgoDateString(daybackoffset)+
-						" iniatated by CRCP PTH cron job";
-			} else {
-				if(comparisonDate2==null || comparisonDate2.isEmpty()){
-					docsetdesc+=comparisonDate.toString();
-					analysisdesc+=comparisonDate.toString();
-				} else {
-					docsetdesc+=comparisonDate.toString()+ " (midnight) to ";
-					docsetdesc+=comparisonDate2.toString()+ " (midnight)";
-					analysisdesc+=comparisonDate.toString()+ " (midnight) to ";
-					analysisdesc+=comparisonDate2.toString()+ " (midnight)";
-				}
-			}
-		} else if(analysisType == ConfigurationSingleton.SEMEVAL_2014_TASK7_ANALYSIS){
-			pipelinestring = "SemEvalDetectionPipeline";
-			docsetdesc = " SemEval Task 7 2014 Docs";
-			analysisdesc = pipelinestring+" on "+datenow;
-		} else if(analysisType == ConfigurationSingleton.SHARECLEF_2014_POST_COORDINATION_ANALYSIS){
-			pipelinestring = "SemEvalPostCoordinationCUIlessPipeline";
-			docsetdesc = "SemEval Task7 CUIless Concepts";
-		} else if(analysisType == ConfigurationSingleton.MELANOMA_DETECTION_ANALYSIS_ID){
-			pipelinestring = "MultipleMyelomaDetectionPipeline";
-		} else if (analysisType == ConfigurationSingleton.MELANOMA_EXTRACTION_ANALYSIS_ID){
-			pipelinestring = "MultipleMyelomaExtractionPipeline";
-		} else if (analysisType == ConfigurationSingleton.OSTEOPENIA_DETECTION_ANALYSIS_ID){
-			pipelinestring = "OsteopeniaDetectionPipeline";
-		} else if (analysisType == ConfigurationSingleton.BONE_LESION_DETECTION_ANALYSIS_ID){
-			pipelinestring = "BoneLesionLucencyDetectionPipeline";
-		} else if (analysisType == ConfigurationSingleton.UPDATE_HASHCODE_ANALYSIS){
-			pipelinestring = "UpdateHashCodePipeline";
-		} else if (analysisType == ConfigurationSingleton.WORD2VEC_MODEL_CREATION_ANALYSIS){
-			pipelinestring = "Word2VecModelCreationPipeline";
-		} else {
-			if(!(mrn==null || mrn.isEmpty())) {
-				docsetdesc += " (MRN "+mrn+")";
-			}
-			if(analysis_description!=null) analysisdesc = analysis_description;
-			if(docset_description!=null) docsetdesc = docset_description;
-		}
-
-		if(analysisType!=ConfigurationSingleton.PATH_REPORT_ANALYSIS_ID){
-			docsetdesc += " up to "+datenow;
-			analysisdesc = pipelinestring+" on "+datenow;
-		}
-		 */
-
-	}
-
-
-	public int insertDocSet(String docSetDescription
-			) throws SQLException {
-		int docSetID = -1;
-
-		String insertTableSQL = "INSERT INTO NLP_DOCSET "
-				+ "( DESCRIPTION ) VALUES (?)  ";
-		try (
-				Connection conn = DriverManager.getConnection(medicsConnectionString);
-				PreparedStatement preparedStatement = 
-						conn.prepareStatement(insertTableSQL, new String[]{"DOCSET_ID"});
-				){
-			preparedStatement.setString(1, docSetDescription );
-			preparedStatement.executeUpdate();
-			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys() ) {
-				if (generatedKeys.next()) {
-					docSetID = generatedKeys.getInt(1);
-					generatedKeys.close();
-				} else {
-					throw new SQLException("Creating NLP_DOCSET, no generated key obtained.");
-				}
-			}
-		} catch (Exception e) {
-			throw(e);
-		}
-		return docSetID;
-	}
 
 
 	public static AnalysisEngineDescription createAnnotatorDescription(int id, int type, 
-			String url, String software, String aDescription, String docsetDescription) throws ResourceInitializationException {
+			String url, String software, String softwareversion,String aDescription, 
+			String docsetDescription, int docsetid) throws ResourceInitializationException {
 		return AnalysisEngineFactory.createEngineDescription(AnalysisAnnotator.class,
 				PARAM_ANALYSIS_ID,
 				id,
@@ -260,10 +186,14 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 				url,
 				PARAM_ANALYSIS_SOFTWARE,
 				software,
+				PARAM_ANALYSIS_SOFTWARE_VERSION,
+				softwareversion,
 				PARAM_ANALYSIS_DESCRIPTION,
 				aDescription,
 				PARAM_DOCUMENT_SOURCE,
-				docsetDescription
+				docsetDescription,
+				PARAM_DOCSET_ID,
+				docsetid
 				);
 	}
 
