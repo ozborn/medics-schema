@@ -36,4 +36,10 @@ public class MedicsConstants {
 	public static final int DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE=0;
 	public static final int DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE= 0;
 	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 0;
+
+	public final static int MAX_ORACLE_VARCHAR2=3999;
+
+	public final static int MAX_ORACLE_WHERECLAUSE=500;
+	//public final static int MAX_ORACLE_WHERECLAUSE=1000;
+
 }

@@ -1,7 +1,6 @@
 package edu.uab.ccts.nlp.medics.util;
 
 import java.util.Properties;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.slf4j.Logger;
