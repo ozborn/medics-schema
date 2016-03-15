@@ -38,7 +38,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
 
 import org.apache.uima.collection.CollectionException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -699,7 +698,6 @@ public class LegacyMedicsTools {
 		} else status=MedicsConstants.ANALYSIS_EMPTY_STATUS;
 		UpdateAnalysisStatus(conn, status, analysis_id);
 		logger.info("Updating analysis "+analysis_id+" with status "+status+"");
-		//conn.commit();
 	}
 
 

@@ -13,19 +13,22 @@ public class AnalysisCallbackListener implements StatusCallbackListener {
 
 	private static final Logger LOG  = LoggerFactory.getLogger(AnalysisCallbackListener.class);
 	String medicsConnectionString;
-	int analysisId;
+	int analysisId,expectedDocumentCount;
 	long stime, pauseTime, restartTime;
 
-	public AnalysisCallbackListener(String medicsUrl, int analysisID,long startTime){
+	public AnalysisCallbackListener(String medicsUrl, int analysisID,long startTime,
+			int expectedDocCount){
 		medicsConnectionString = medicsUrl;
 		analysisId=analysisID;
 		stime = startTime;
+		expectedDocumentCount=expectedDocCount;
 	}
 
 	@Override
 	public void collectionProcessComplete() {
 		long totalTime = System.nanoTime() / 1000000 - stime;
 		try (Connection con = DriverManager.getConnection(medicsConnectionString)){
+			LegacyMedicsTools.determineAnalysisStatus(con, expectedDocumentCount, analysisId);
 			LegacyMedicsTools.UpdateAnalysisProcessTime(con
 					, totalTime, analysisId);
 			LOG.info("Finished processing");
