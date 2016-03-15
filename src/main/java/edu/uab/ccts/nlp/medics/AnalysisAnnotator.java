@@ -59,7 +59,6 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 			name = PARAM_DOCSET_ID,
 			mandatory = false,
 			description = "input docset id, inserted by client"
-			//,defaultValue = "0" //Does not work?
 			)
 	int docSetId;
 
@@ -97,8 +96,7 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 	public void initialize(UimaContext aContext) throws ResourceInitializationException {
 		super.initialize(aContext);
 		log = aContext.getLogger();
-		log.log(Level.INFO,"Medics URL initialized to:"+medicsConnectionString);
-		log.log(Level.INFO,"Analysis Description initialized to:"+analysisDescription);
+		log.log(Level.INFO,"Running "+analysisDescription+" saving to "+medicsConnectionString);
 	}
 
 
@@ -112,71 +110,19 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 		nlpan.setAnalysisSoftware(analysisSoftware);
 		nlpan.setAnalysisSoftwareVersion(analysisSoftwareVersion);
 		nlpan.setDocumentSource(documentDescription);
-		/*
-		int docSetId = insertDocSet(documentDescription);
-		nlpan.setAnalysisDataSet(docSetId);
-		if(analysisID==MedicsConstants.DEFAULT_ANALYSIS_SENTINEL_VALUE){
-			insertAnalysis(nlpan);
-		}
-		*/
 		nlpan.setAnalysisDataSet(docSetId);
 		nlpan.setAnalysisID(analysisID);
 		nlpan.addToIndexes(jcas);
-		log.log(Level.INFO,"Wrote analysis "+analysisID+" to "
+		log.log(Level.FINER,"Wrote analysis "+analysisID+" to "
 				+jcas.getViewName()+" of type "+analysisType);
 		} catch (Exception e) { throw new AnalysisEngineProcessException(e); }
 	}
 
-/*
-	private void insertAnalysis(NLP_Analysis nlpanal) {
-		String insertTableSQL = "INSERT INTO NLP_ANALYSIS"
-				+ "(  ANALYSIS_TYPE, ANALYSIS_SOFTWARE, "+
-				" ANALYSIS_DESCRIPTION, MACHINE, ANALYSIS_DATASET, ANALYSIS_SOFTWARE_VERSION"+
-				",ANALYSIS_START_DATE "+
-				") VALUES (?,?,?,?,?,?,SYSDATE)  ";
-		try (
-				Connection conn =  DriverManager.getConnection(medicsConnectionString);
-				PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, 
-						new String[]{"ANALYSIS_ID"})
-				)
-		{
-			preparedStatement.setString(1, String.valueOf(nlpanal.getAnalysisType()));
-			log.log(Level.FINER,"Using software "+nlpanal.getAnalysisSoftware());
-			preparedStatement.setString(2, nlpanal.getAnalysisSoftware() );
-			preparedStatement.setString(3, nlpanal.getAnalysisDescription() );
-			try {
-				preparedStatement.setString(4, InetAddress.getLocalHost().getHostName() );
-			} catch (UnknownHostException e) {
-				preparedStatement.setString(4, "Unknown host");
-				log.log(Level.WARNING,"InetAddress.getLocalHost().getHostName " + e.getMessage());
-			}
-			preparedStatement.setInt(5, nlpanal.getAnalysisDataSet() );
-			log.log(Level.FINER,"Using software version "+nlpanal.getAnalysisSoftwareVersion());
-			preparedStatement.setString(6, nlpanal.getAnalysisSoftwareVersion() );
-			preparedStatement.executeUpdate();
-			try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()){
-				if (generatedKeys.next()) {
-					analysisID = generatedKeys.getInt(1);
-				} else {
-					throw new Exception("Creating NLP_ANALYSIS, no generated key obtained.");
-				}
-			} catch (Exception e) {
-				log.log(Level.WARNING,"Failed to insert analysis run with "+analysisSoftware+
-				" version "+analysisSoftwareVersion+" on docset:"+nlpanal.getAnalysisDataSet());
-				throw e;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-*/
 
-
-
-
+	
 	public static AnalysisEngineDescription createAnnotatorDescription(int id, int type, 
 			String url, String software, String softwareversion,String aDescription, 
-			String docsetDescription, int docsetid) throws ResourceInitializationException {
+			String docsetDescription, int docsetid ) throws ResourceInitializationException {
 		return AnalysisEngineFactory.createEngineDescription(AnalysisAnnotator.class,
 				PARAM_ANALYSIS_ID,
 				id,

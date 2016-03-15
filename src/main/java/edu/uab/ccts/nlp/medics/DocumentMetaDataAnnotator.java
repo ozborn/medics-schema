@@ -107,7 +107,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		if(source!=null) pprop.setSource(source);
 		pprop.setImportAnalysis(importAnalysisId);
 		pprop.addToIndexes();
-		LOG.info("Finished setting document meta-data properties to view "+jcas.getViewName());
+		LOG.debug("Finished setting document meta-data properties to view "+jcas.getViewName());
 		return;
 	}
 
@@ -121,7 +121,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	 */
 	public void guessSourceId(JCas jcas, NLP_Clobs doc) throws AnalysisEngineProcessException {
 		if(sourceIdentifier==null) {
-			LOG.info("No Source identifier provided");
+			LOG.debug("No Source identifier provided");
 			try {
 				if(jcas.getSofaDataURI()!=null) {
 					doc.setSourceID(jcas.getSofaDataURI().toString());
@@ -130,7 +130,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 					if(uriview!=null){
 						sourceIdentifier = uriview.getSofaDataURI().toString();
 						doc.setSourceID(sourceIdentifier);
-						LOG.info(sourceIdentifier+" source id set");
+						LOG.debug(sourceIdentifier+" source id set");
 					}
 				}
 			} catch (CASException e) {
