@@ -1,5 +1,6 @@
 package edu.uab.ccts.nlp.medics;
 
+import java.net.URI;
 import java.util.Collection;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -101,6 +102,12 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		NLP_Clobs pprop =  new NLP_Clobs(jcas);
 		guessSourceId(jcas,pprop);
 		pprop.setMRN(MedicsConstants.DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE);
+		try {
+			JCas uriview = jcas.getView("UriView");
+			if(uriview!=null && uriview.getDocumentText()!=null){
+				pprop.setURI(uriview.getDocumentText());
+			}
+		} catch (Exception e) {LOG.debug("No UriView found");}
 		if(version!=MedicsConstants.DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE){
 			pprop.setDocumentVersion(version);
 		}
