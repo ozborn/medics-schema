@@ -1,15 +1,19 @@
 package edu.uab.ccts.nlp.medics;
 
+import java.util.Collection;
+
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.uab.ccts.nlp.medics.util.MedicsConstants;
+import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 
 import org.slf4j.Logger;
@@ -105,7 +109,13 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		if(type!=null) pprop.setDocumentTypeAbbreviation(type);
 		if(subtype!=null) pprop.setDocumentSubType(subtype);
 		if(source!=null) pprop.setSource(source);
-		pprop.setImportAnalysis(importAnalysisId);
+		Collection<NLP_Analysis> anals = JCasUtil.select(jcas, NLP_Analysis.class);
+		if(anals!=null && anals.size()==1) {
+			importAnalysisId = anals.iterator().next().getAnalysisID();
+			pprop.setImportAnalysis(importAnalysisId);
+		} else if(importAnalysisId>0) {
+			pprop.setImportAnalysis(importAnalysisId);
+		} else LOG.warn("Import analysis ID unknown");
 		pprop.addToIndexes();
 		LOG.debug("Finished setting document meta-data properties to view "+jcas.getViewName());
 		return;
