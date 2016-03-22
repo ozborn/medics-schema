@@ -123,10 +123,13 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			pprop.setImportAnalysis(importAnalysisId);
 		} else LOG.warn("Import analysis ID unknown");
 		pprop.addToIndexes();
-		int snippetend = jcas.getDocumentText().length();
-		snippetend = (100 > snippetend) ? 100 : snippetend;
 		LOG.info("Set MRN/Source id:"+pprop.getMRN()+"/"+pprop.getSourceID()+" URL:"+pprop.getURL()+
-		"in view "+jcas.getViewName()+" and text snippet:"+jcas.getDocumentText().substring(0, snippetend));
+		"in view "+jcas.getViewName());
+		if(jcas.getDocumentText()!=null) {
+			int snippetend = jcas.getDocumentText().length();
+			snippetend = (100 > snippetend) ? 100 : snippetend;
+			LOG.info("Text snippet:"+jcas.getDocumentText().substring(0, snippetend));
+		} else LOG.warn("No text to annotate with MetaData?!");
 		return;
 	}
 
