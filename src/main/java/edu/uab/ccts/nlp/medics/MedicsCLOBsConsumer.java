@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -132,7 +130,8 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
 				thedoc.getDocumentTypeAbbreviation(),thedoc.getDocumentSubType(),
-				null,thedoc.getDocumentVersion(), jcas.getDocumentText(), thedoc.getURL());
+				null,thedoc.getDocumentVersion(), jcas.getDocumentText(), thedoc.getURL(),
+				thedoc.getMd5Sum());
 				thedoc.setReportID(docid);
 			}
 		} catch (Exception e) {
@@ -145,27 +144,17 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 	private int insertDocument(Logger logger, String source_id,
 			String mrn,java.sql.Date dn_update_datetime, String source,
 			String type, String subtype, String mimetype, Integer version,
-			String converted_doc, String docurl)
+			String converted_doc, String docurl, String md5sum)
 					throws SQLException, NoSuchAlgorithmException, UnsupportedEncodingException {
 		int documentIdentifier = -1;
 		if(mimetype==null) mimetype="text";
-		String md5sum ="";
-		MessageDigest algorithm;
 		String doc_metadata = "document source id:"+source_id+
-				" from source "+source+" with version "+version;
+				" from source "+source+" with version "+version+
+				" and md5sum "+md5sum;
 		try (
 				Connection conn =  DriverManager.getConnection(medicsConnectionString);
 				PreparedStatement preparedStatement = conn.prepareStatement(insertSql, new String[]{"NC_REPORTID"})
 			){
-			algorithm = MessageDigest.getInstance("MD5");
-			algorithm.reset();
-			algorithm.update(converted_doc.getBytes("UTF-8")); //Close enough to Oracle AL32UTF8
-			byte[] md5bytes = algorithm.digest();
-			BigInteger bigint = new BigInteger(1,md5bytes);
-			String md5nolead = bigint.toString(16);
-			md5sum = ("00000000000000000000000000000000"+md5nolead).substring(md5nolead.length());
-			doc_metadata += " and md5sum "+md5sum;
-
 			preparedStatement.setString(1, source_id );
 			preparedStatement.setString(2, mrn );
 			preparedStatement.setDate(3, dn_update_datetime );

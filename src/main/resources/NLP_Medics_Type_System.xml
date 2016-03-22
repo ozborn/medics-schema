@@ -70,7 +70,7 @@ Should be stored in ISO/Oracle date format of YYYY-MM-dd</description>
       <featureDescription>
           <name>Md5Sum</name>
           <description>MD5 CheckSum value of document. Distinguishes between conversions of the same source document.</description>
-          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>ImportAnalysis</name>

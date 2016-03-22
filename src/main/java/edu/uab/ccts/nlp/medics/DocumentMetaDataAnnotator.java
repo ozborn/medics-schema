@@ -13,6 +13,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.uab.ccts.nlp.medics.util.MedicsConstants;
+import edu.uab.ccts.nlp.medics.util.MedicsTools;
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
 
@@ -122,14 +123,16 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		} else if(importAnalysisId>0) {
 			pprop.setImportAnalysis(importAnalysisId);
 		} else LOG.warn("Import analysis ID unknown");
-		pprop.addToIndexes();
 		LOG.info("Set MRN/Source id:"+pprop.getMRN()+"/"+pprop.getSourceID()+" URL:"+pprop.getURL()+
-		"in view "+jcas.getViewName());
+				"in view "+jcas.getViewName());
 		if(jcas.getDocumentText()!=null) {
+			MedicsTools mt = new MedicsTools();
+			pprop.setMd5Sum(mt.calculateMd5(jcas.getDocumentText()));
 			int snippetend = jcas.getDocumentText().length();
 			snippetend = (100 > snippetend) ? 100 : snippetend;
 			LOG.info("Text snippet:"+jcas.getDocumentText().substring(0, snippetend));
 		} else LOG.warn("No text to annotate with MetaData?!");
+		pprop.addToIndexes();
 		return;
 	}
 
@@ -163,8 +166,6 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			doc.setSourceID(sourceIdentifier); 
 		}
 	}
-
-
 
 	public static AnalysisEngineDescription createAnnotatorDescription(
 			String type, int ver, String src, int importId ) throws ResourceInitializationException {

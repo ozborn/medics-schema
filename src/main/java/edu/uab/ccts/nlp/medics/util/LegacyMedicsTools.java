@@ -823,7 +823,7 @@ public class LegacyMedicsTools {
 			java.sql.Date dn_update_datetime, String type, String subtype,
 			String mrn, Integer version, int generated_key, NLP_Clobs pprop)
 					throws NumberFormatException {
-		pprop.setURI(url);
+		pprop.setURL(url);
 		if(mrn!=null) pprop.setMRN(Integer.parseInt(mrn.toString()));
 		pprop.setReportID( (new Integer(generated_key)));
 		pprop.setDateOfService(dn_update_datetime.toString());
