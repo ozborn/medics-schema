@@ -128,9 +128,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		if(jcas.getDocumentText()!=null) {
 			MedicsTools mt = new MedicsTools();
 			pprop.setMd5Sum(mt.calculateMd5(jcas.getDocumentText()));
-			int snippetend = jcas.getDocumentText().length();
-			snippetend = (100 > snippetend) ? 100 : snippetend;
-			LOG.info("Text snippet:"+jcas.getDocumentText().substring(0, snippetend));
+			LOG.info("MD5sum:"+pprop.getMd5Sum());
 		} else LOG.warn("No text to annotate with MetaData?!");
 		pprop.addToIndexes();
 		return;

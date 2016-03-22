@@ -121,11 +121,9 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				", exiting not updating...");
 				return;
 			} else {
-				int snippetend = jcas.getDocumentText().length();
-				snippetend = (100 > snippetend) ? 100 : snippetend;
 				uContext.getLogger().log(Level.INFO,
-						"Document with source id:"+thedoc.getSourceID()+" and URI "+
-						thedoc.getURL()+" and text snippet "+jcas.getDocumentText().substring(0, snippetend)+" has NOT been "+
+						"Document with MRN/source id:"+thedoc.getMRN()+"/"+thedoc.getSourceID()+" and URI "+
+						thedoc.getURL()+" and md5sum "+thedoc.getMd5Sum()+" has NOT been "+
 						"stored in medics database, writing..."); 
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
@@ -190,6 +188,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				resultset.next();
 				documentIdentifier = resultset.getInt(1);
 				resultset.close();
+				logger.log(Level.INFO,"Trying to insert duplicate document "+documentIdentifier);
 				LegacyMedicsTools.updateDocumentHistory(conn,
 						documentIdentifier, analysisId, MedicsConstants.DOCUMENT_DATABASE_WRITE_SUCCESS);
 				
