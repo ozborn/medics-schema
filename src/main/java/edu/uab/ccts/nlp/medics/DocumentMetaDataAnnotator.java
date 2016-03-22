@@ -1,6 +1,5 @@
 package edu.uab.ccts.nlp.medics;
 
-import java.net.URI;
 import java.util.Collection;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -104,8 +103,8 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		pprop.setMRN(MedicsConstants.DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE);
 		try {
 			JCas uriview = jcas.getView("UriView");
-			if(uriview!=null && uriview.getDocumentText()!=null){
-				pprop.setURI(uriview.getDocumentText());
+			if(uriview!=null && uriview.getSofaDataURI()!=null){
+				pprop.setURL(uriview.getSofaDataURI());
 			}
 		} catch (Exception e) {LOG.debug("No UriView found");}
 		if(version!=MedicsConstants.DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE){
@@ -124,7 +123,10 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			pprop.setImportAnalysis(importAnalysisId);
 		} else LOG.warn("Import analysis ID unknown");
 		pprop.addToIndexes();
-		LOG.debug("Finished setting document meta-data properties to view "+jcas.getViewName());
+		int snippetend = jcas.getDocumentText().length();
+		snippetend = (100 > snippetend) ? 100 : snippetend;
+		LOG.info("Set MRN/Source id:"+pprop.getMRN()+"/"+pprop.getSourceID()+" URL:"+pprop.getURL()+
+		"in view "+jcas.getViewName()+" and text snippet:"+jcas.getDocumentText().substring(0, snippetend));
 		return;
 	}
 
@@ -136,18 +138,18 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	 * @param jcas
 	 * @return the source id
 	 */
-	public void guessSourceId(JCas jcas, NLP_Clobs doc) throws AnalysisEngineProcessException {
+	public void guessSourceId(JCas jcas, NLP_Clobs doc) {
 		if(sourceIdentifier==null) {
 			LOG.debug("No Source identifier provided");
 			try {
-				if(jcas.getSofaDataURI()!=null) {
+				if(jcas.getSofaDataURI()!=null && !jcas.getSofaDataURI().isEmpty()) {
 					doc.setSourceID(jcas.getSofaDataURI().toString());
 				} else {
 					JCas uriview = jcas.getView("UriView");
 					if(uriview!=null){
 						sourceIdentifier = uriview.getSofaDataURI().toString();
 						doc.setSourceID(sourceIdentifier);
-						LOG.debug(sourceIdentifier+" source id set");
+						LOG.info(sourceIdentifier+" source id set from uri");
 					}
 				}
 			} catch (CASException e) {

@@ -17,8 +17,8 @@ Now includes support for the NLP_ENTITY* tables</description>
       <supertypeName>uima.tcas.Annotation</supertypeName>
       <features>
         <featureDescription>
-          <name>URI</name>
-          <description/>
+          <name>URL</name>
+          <description>Location of document at import time.</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
@@ -58,11 +58,6 @@ Should be stored in ISO/Oracle date format of YYYY-MM-dd</description>
           <rangeTypeName>uima.cas.Integer</rangeTypeName>
         </featureDescription>
         <featureDescription>
-          <name>HasBeenProcessed</name>
-          <description>Whether the document has been processed by any pipeline, just cancer registry for now.</description>
-          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
-        </featureDescription>
-        <featureDescription>
           <name>MedicsArrivalTime</name>
           <description>Date at which document arrived in NLP_Clobs</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
@@ -73,8 +68,8 @@ Should be stored in ISO/Oracle date format of YYYY-MM-dd</description>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
       <featureDescription>
-          <name>JavaHashCode</name>
-          <description>Java 32 bit hash code String.hashCode() of documenmt.</description>
+          <name>Md5Sum</name>
+          <description>MD5 CheckSum value of document. Distinguishes between conversions of the same source document.</description>
           <rangeTypeName>uima.cas.Integer</rangeTypeName>
         </featureDescription>
         <featureDescription>

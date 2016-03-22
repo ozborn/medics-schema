@@ -17,6 +17,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -27,6 +28,7 @@ import org.apache.uima.cas.FSIndex;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -107,16 +109,11 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			throw new AnalysisEngineProcessException(e);
 		} 
 
-		try {
-			FSIndex<Annotation> medIndex = jcas.getAnnotationIndex(NLP_Clobs.type);
-			Iterator<Annotation> medIter = medIndex.iterator();
-			thedoc = (NLP_Clobs) medIter.next();
-		} catch (Exception e) {
-			uContext.getLogger().log(Level.SEVERE,
-			"No medics document/clob annotation in "+jcas.getViewName()+", use"+
-			" DocumentMetaDataAnnotator to create default MetaData!");
-			throw new AnalysisEngineProcessException(e);
-		}
+			Collection<NLP_Clobs> mdocs = JCasUtil.select(jcas, NLP_Clobs.class);
+			if(mdocs==null || mdocs.size()!=1) {
+				getContext().getLogger().log(Level.SEVERE,"Did not find 1 metadocument!");
+			}
+			thedoc = (NLP_Clobs) mdocs.iterator().next();
 
 		try {
 			if(thedoc.getReportID()!=0) {
@@ -126,13 +123,16 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				", exiting not updating...");
 				return;
 			} else {
-				uContext.getLogger().log(Level.FINE,
-						"Document with source id:"+thedoc.getSourceID()+" has NOT been "+
+				int snippetend = jcas.getDocumentText().length();
+				snippetend = (100 > snippetend) ? 100 : snippetend;
+				uContext.getLogger().log(Level.INFO,
+						"Document with source id:"+thedoc.getSourceID()+" and URI "+
+						thedoc.getURL()+" and text snippet "+jcas.getDocumentText().substring(0, snippetend)+" has NOT been "+
 						"stored in medics database, writing..."); 
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),
 				thedoc.getDocumentTypeAbbreviation(),thedoc.getDocumentSubType(),
-				null,thedoc.getDocumentVersion(), jcas.getDocumentText());
+				null,thedoc.getDocumentVersion(), jcas.getDocumentText(), thedoc.getURL());
 				thedoc.setReportID(docid);
 			}
 		} catch (Exception e) {
@@ -145,7 +145,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 	private int insertDocument(Logger logger, String source_id,
 			String mrn,java.sql.Date dn_update_datetime, String source,
 			String type, String subtype, String mimetype, Integer version,
-			String converted_doc)
+			String converted_doc, String docurl)
 					throws SQLException, NoSuchAlgorithmException, UnsupportedEncodingException {
 		int documentIdentifier = -1;
 		if(mimetype==null) mimetype="text";
@@ -177,6 +177,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 			preparedStatement.setString(9, md5sum );
 			preparedStatement.setInt(10, analysisId );
 			preparedStatement.setTime(11, getCurrentTime() );
+			preparedStatement.setString(12, docurl );
 			preparedStatement.executeUpdate();
 			ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
 			generatedKeys.next();
