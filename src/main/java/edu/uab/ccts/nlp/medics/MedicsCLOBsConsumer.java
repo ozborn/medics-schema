@@ -122,8 +122,9 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				return;
 			} else {
 				uContext.getLogger().log(Level.INFO,
-						"Document with MRN/source id:"+thedoc.getMRN()+"/"+thedoc.getSourceID()+" and URI "+
-						thedoc.getURL()+" and md5sum "+thedoc.getMd5Sum()+" has NOT been "+
+						"Document with MRN/source id/md5sum:"+thedoc.getMRN()+"/"
+				+thedoc.getSourceID()+"/"+thedoc.getMd5Sum()+" and URI "+
+						thedoc.getURL()+" has NOT been "+
 						"stored in medics database, writing..."); 
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),

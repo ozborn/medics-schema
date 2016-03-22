@@ -11,14 +11,13 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.util.Level;
+import org.apache.uima.util.Logger;
 
 import edu.uab.ccts.nlp.medics.util.MedicsConstants;
 import edu.uab.ccts.nlp.medics.util.MedicsTools;
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generates based on parameters some metadata about the document being analyzed
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
-	private static final Logger LOG  = LoggerFactory.getLogger(DocumentMetaDataAnnotator.class);
 
 	public static final String PARAM_PATIENT_IDENTIFIER = "patientIdentifier";
 	public static final String PARAM_VERSION = "version";
@@ -39,6 +37,8 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	public static final String PARAM_DOCUMENT_CREATION_DATE = "documentCreationDate";
 	public static final String PARAM_DOCSET_ID = "docSetID";
 	public static final String PARAM_IMPORT_ANALYSIS_ID = "importAnalysisId";
+	
+	private Logger log;
 
 	//UIMA-FIT Parameter Assignment
 	@ConfigurationParameter(
@@ -99,6 +99,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
+		log = this.getContext().getLogger();
 		NLP_Clobs pprop =  new NLP_Clobs(jcas);
 		guessSourceId(jcas,pprop);
 		pprop.setMRN(MedicsConstants.DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE);
@@ -107,7 +108,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			if(uriview!=null && uriview.getSofaDataURI()!=null){
 				pprop.setURL(uriview.getSofaDataURI());
 			}
-		} catch (Exception e) {LOG.debug("No UriView found");}
+		} catch (Exception e) {log.log(Level.FINE,"No UriView found");}
 		if(version!=MedicsConstants.DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE){
 			pprop.setDocumentVersion(version);
 		}
@@ -122,15 +123,18 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			pprop.setImportAnalysis(importAnalysisId);
 		} else if(importAnalysisId>0) {
 			pprop.setImportAnalysis(importAnalysisId);
-		} else LOG.warn("Import analysis ID unknown");
-		LOG.info("Set MRN/Source id:"+pprop.getMRN()+"/"+pprop.getSourceID()+" URL:"+pprop.getURL()+
-				"in view "+jcas.getViewName());
+		} else log.log(Level.CONFIG,"Import analysis ID unknown");
+		String md5sum = "";
 		if(jcas.getDocumentText()!=null) {
 			MedicsTools mt = new MedicsTools();
-			pprop.setMd5Sum(mt.calculateMd5(jcas.getDocumentText()));
-			LOG.info("MD5sum:"+pprop.getMd5Sum());
-		} else LOG.warn("No text to annotate with MetaData?!");
+			md5sum = mt.calculateMd5(jcas.getDocumentText());
+			pprop.setMd5Sum(md5sum);
+			log.log(Level.INFO,"MD5sum:"+pprop.getMd5Sum());
+		} else log.log(Level.WARNING,"No text to annotate with MetaData?!");
 		pprop.addToIndexes();
+		log.log(Level.INFO,"Set MRN/Source id/md5sum:"+pprop.getMRN()+"/"+
+		pprop.getSourceID()+" URL:"+pprop.getURL()+"/"+md5sum+
+				" in view "+jcas.getViewName());
 		return;
 	}
 
@@ -144,7 +148,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	 */
 	public void guessSourceId(JCas jcas, NLP_Clobs doc) {
 		if(sourceIdentifier==null) {
-			LOG.debug("No Source identifier provided");
+			log.log(Level.FINE,"No Source identifier provided");
 			try {
 				if(jcas.getSofaDataURI()!=null && !jcas.getSofaDataURI().isEmpty()) {
 					doc.setSourceID(jcas.getSofaDataURI().toString());
@@ -153,14 +157,14 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 					if(uriview!=null){
 						sourceIdentifier = uriview.getSofaDataURI().toString();
 						doc.setSourceID(sourceIdentifier);
-						LOG.info(sourceIdentifier+" source id set from uri");
+						log.log(Level.INFO,sourceIdentifier+" source id set from uri");
 					}
 				}
 			} catch (CASException e) {
-				LOG.warn("Could not determine source identifier");
+				log.log(Level.WARNING,"Could not determine source identifier");
 			}
 		} else {
-			LOG.info("Source identifier "+sourceIdentifier+" was provided");
+			log.log(Level.INFO,"Source identifier "+sourceIdentifier+" was provided");
 			doc.setSourceID(sourceIdentifier); 
 		}
 	}
