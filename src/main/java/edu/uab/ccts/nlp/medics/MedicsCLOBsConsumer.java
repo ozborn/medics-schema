@@ -124,7 +124,7 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				uContext.getLogger().log(Level.INFO,
 						"Document with MRN/source id/md5sum:"+thedoc.getMRN()+"/"
 				+thedoc.getSourceID()+"/"+thedoc.getMd5Sum()+" and URI "+
-						thedoc.getURL()+" has NOT been "+
+						thedoc.getURL()+" has optimistically predicted NOT "+
 						"stored in medics database, writing..."); 
 				int docid = insertDocument(logger,thedoc.getSourceID(),Integer.toString(thedoc.getMRN()),
 				convertStringToSqlDate(thedoc.getDateOfService(),"yyyy-MM-dd"),thedoc.getSource(),

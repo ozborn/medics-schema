@@ -129,7 +129,6 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			MedicsTools mt = new MedicsTools();
 			md5sum = mt.calculateMd5(jcas.getDocumentText());
 			pprop.setMd5Sum(md5sum);
-			log.log(Level.INFO,"MD5sum:"+pprop.getMd5Sum());
 		} else log.log(Level.WARNING,"No text to annotate with MetaData?!");
 		pprop.addToIndexes();
 		log.log(Level.INFO,"Set MRN/Source id/md5sum:"+pprop.getMRN()+"/"+
