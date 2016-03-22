@@ -37,7 +37,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 	public static final String PARAM_DOCUMENT_CREATION_DATE = "documentCreationDate";
 	public static final String PARAM_DOCSET_ID = "docSetID";
 	public static final String PARAM_IMPORT_ANALYSIS_ID = "importAnalysisId";
-	
+
 	private Logger log;
 
 	//UIMA-FIT Parameter Assignment
@@ -60,10 +60,12 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 			description = "Source of document, ex) icda, cflo, semeval")
 	protected String source = null;
 
+	/*
 	@ConfigurationParameter(
 			name = PARAM_SOURCE_IDENTIFIER,
 			mandatory = false,
 			description = "Source Identifier, perhaps a URL or database primary key")
+	 */
 	protected String sourceIdentifier = null;
 
 	@ConfigurationParameter(
@@ -132,7 +134,7 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 		} else log.log(Level.WARNING,"No text to annotate with MetaData?!");
 		pprop.addToIndexes();
 		log.log(Level.INFO,"Set MRN/Source id/md5sum:"+pprop.getMRN()+"/"+
-		pprop.getSourceID()+" URL:"+pprop.getURL()+"/"+md5sum+
+				pprop.getSourceID()+" URL:"+pprop.getURL()+"/"+md5sum+
 				" in view "+jcas.getViewName());
 		return;
 	}
@@ -140,31 +142,30 @@ public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {
 
 
 	/**
+	 * 
 	 * This can be overridden for populating document meta information from variable
-	 * format URI's
+	 * format URLs
 	 * @param jcas
-	 * @return the source id
+	 * @param doc
 	 */
 	public void guessSourceId(JCas jcas, NLP_Clobs doc) {
-		if(sourceIdentifier==null) {
-			log.log(Level.FINE,"No Source identifier provided");
-			try {
-				if(jcas.getSofaDataURI()!=null && !jcas.getSofaDataURI().isEmpty()) {
-					doc.setSourceID(jcas.getSofaDataURI().toString());
-				} else {
-					JCas uriview = jcas.getView("UriView");
-					if(uriview!=null){
-						sourceIdentifier = uriview.getSofaDataURI().toString();
-						doc.setSourceID(sourceIdentifier);
-						log.log(Level.INFO,sourceIdentifier+" source id set from uri");
-					}
+		try {
+			if(jcas.getSofaDataURI()!=null && !jcas.getSofaDataURI().isEmpty()) {
+				sourceIdentifier = jcas.getSofaDataURI().toString();
+				doc.setSourceID(sourceIdentifier);
+				log.log(Level.INFO,sourceIdentifier+" source id set from SofaDataUri");
+				return;
+			} else {
+				JCas uriview = jcas.getView("UriView");
+				if(uriview!=null){
+					sourceIdentifier = uriview.getSofaDataURI().toString();
+					doc.setSourceID(sourceIdentifier);
+					log.log(Level.INFO,sourceIdentifier+" source id set from UriView");
 				}
-			} catch (CASException e) {
-				log.log(Level.WARNING,"Could not determine source identifier");
+				return;
 			}
-		} else {
-			log.log(Level.INFO,"Source identifier "+sourceIdentifier+" was provided");
-			doc.setSourceID(sourceIdentifier); 
+		} catch (CASException e) {
+			log.log(Level.WARNING,"Could not determine source identifier");
 		}
 	}
 
