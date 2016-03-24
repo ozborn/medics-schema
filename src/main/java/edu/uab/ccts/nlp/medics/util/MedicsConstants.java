@@ -41,5 +41,8 @@ public class MedicsConstants {
 
 	public final static int MAX_ORACLE_WHERECLAUSE=500;
 	//public final static int MAX_ORACLE_WHERECLAUSE=1000;
+	
+	
+	public static final int WORD2VEC_MODEL_CREATION_ANALYSIS=-11;	
 
 }
