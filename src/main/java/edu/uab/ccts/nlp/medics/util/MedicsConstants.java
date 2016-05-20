@@ -44,5 +44,6 @@ public class MedicsConstants {
 	
 	
 	public static final int WORD2VEC_MODEL_CREATION_ANALYSIS=-11;	
+	public static final int WORD2VEC_CUI_MODEL_CREATION_ANALYSIS=-13;
 
 }
