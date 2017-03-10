@@ -160,8 +160,9 @@
 	"NC_VERSION" NUMBER, 
 	"NC_MEDICS_ARRIVAL_TIME" TIMESTAMP (6) WITH LOCAL TIME ZONE, 
 	"NC_SOURCE_ID" VARCHAR2(255 BYTE), 
-	"NC_JAVAHASHCODE" NUMBER, 
-	"NC_IMPORT_ANALYSIS" NUMBER
+	"NC_MD5_DOC_HASH" CHAR(32 BYTE), 
+	"NC_IMPORT_ANALYSIS" NUMBER, 
+	"URL" VARCHAR2(1000 BYTE)
    ) SEGMENT CREATION IMMEDIATE 
   PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
  NOCOMPRESS LOGGING
@@ -185,8 +186,10 @@
    COMMENT ON COLUMN "MEDICS"."NLP_DOCS"."NC_VERSION" IS 'Corresponds to the Careflow version field (1 or 2). In the case of ICDA it corresponds to DN result status.';
    COMMENT ON COLUMN "MEDICS"."NLP_DOCS"."NC_MEDICS_ARRIVAL_TIME" IS 'Date at which document was transferred from source document system (usually icda or cflo) to medics.';
    COMMENT ON COLUMN "MEDICS"."NLP_DOCS"."NC_SOURCE_ID" IS 'A non-unique identifier for the document representing the source identifier. It corresponds to DN_UNIQUE_ID in ICDA documents and REPORTID in Careflow documents.';
-   COMMENT ON COLUMN "MEDICS"."NLP_DOCS"."NC_JAVAHASHCODE" IS 'Result of string.hashcode() in java 1.6+. Used to distinguish between the same source code that went through a different conversion process, ex) new version of Tika generates different text for the same original PDF document. This should be used on the string obtained by getCharacterStream() on NC_CLCONT. Not currently supposed on FIG.';
-   COMMENT ON COLUMN "MEDICS"."NLP_DOCS"."NC_IMPORT_ANALYSIS" IS 'Analysis used for import, to allow provenance for TIKA version when converting BLOBs.';
+   COMMENT ON COLUMN "MEDICS_DEV"."NLP_DOCS"."NC_MD5_DOC_HASH" IS 'MD5_HASH calculated by Oracle DBMS_CRYPTO. Used to distinguish between the same source code that went through a different conversion process, ex) new version of Tika generates different text for the same original PDF document. This should be used on the string obtained by getCharacterStream() on NC_CLCONT';
+   COMMENT ON COLUMN "MEDICS_DEV"."NLP_DOCS"."NC_IMPORT_ANALYSIS" IS 'The analysis responsible for importing the document into NLP_DOCS.';
+   COMMENT ON COLUMN "MEDICS_DEV"."NLP_DOCS"."URL" IS 'URL of source document.';
+
 --------------------------------------------------------
 --  DDL for Table NLP_DOCSET
 --------------------------------------------------------
