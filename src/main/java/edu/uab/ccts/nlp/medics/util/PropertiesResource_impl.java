@@ -47,4 +47,6 @@ public class PropertiesResource_impl implements PropertiesResource, SharedResour
  * Get the loaded properties
    */
   public Properties getProperties(){ return prop; }
+
+  public void setProperties(Properties p) { prop=p;}
 }
