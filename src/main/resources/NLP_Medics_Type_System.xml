@@ -285,6 +285,51 @@ beth, partners or test</description>
         </featureDescription>
       </features>
     </typeDescription>
+
+
+    <typeDescription>
+      <name>edu.uab.ccts.nlp.uima.ts.NLP_Analysis_Pipeline</name>
+      <description>A type of NLP analysis pipeline</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>ID</name>
+          <description>Primary key in database</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Version</name>
+          <description>Version of the pipeline</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Name</name>
+          <description>Name of the pipeline</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DefaultThreads</name>
+          <description>Default threads for UIMA-AS allocation</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>AS_Queue_Name</name>
+          <description>Queue in AS for the pipeline</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Legacy_Analysis_Type_Id</name>
+          <description>Legacy code identifier for analysis predating existence of thsi table</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Is_Machine</name>
+          <description>Whether this analysis is only performed by machines</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+
     <typeDescription>
       <name>edu.uab.ccts.nlp.uima.ts.NLP_Analysis</name>
       <description>The result of an analysis run.</description>

@@ -599,6 +599,7 @@ public class LegacyMedicsTools {
 	 * @param p_status
 	 * @param software_version (like 0.93)
 	 * @return
+	 * @deprecated
 	 * @throws SQLException
 	 */
 	public static int InsertAnalysis(Connection conn,
@@ -670,7 +671,7 @@ public class LegacyMedicsTools {
 	}
 
 
-	public static void determineAnalysisStatus(Connection conn, int expected_docs, 
+	public static void checkAndUpdateAnalysisStatus(Connection conn, int expected_docs, 
 			int analysis_id) throws SQLException{
 		int status=1;
 		int observed_docs=-1;

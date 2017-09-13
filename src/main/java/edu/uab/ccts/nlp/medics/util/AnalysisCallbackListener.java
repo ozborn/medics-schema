@@ -28,7 +28,7 @@ public class AnalysisCallbackListener implements StatusCallbackListener {
 	public void collectionProcessComplete() {
 		long totalTime = System.nanoTime() / 1000000 - stime;
 		try (Connection con = DriverManager.getConnection(medicsConnectionString)){
-			LegacyMedicsTools.determineAnalysisStatus(con, expectedDocumentCount, analysisId);
+			LegacyMedicsTools.checkAndUpdateAnalysisStatus(con, expectedDocumentCount, analysisId);
 			LegacyMedicsTools.UpdateAnalysisProcessTime(con
 					, totalTime, analysisId);
 			LOG.info("Finished processing");
