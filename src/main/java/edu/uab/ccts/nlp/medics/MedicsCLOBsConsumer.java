@@ -118,7 +118,11 @@ public class MedicsCLOBsConsumer extends JCasAnnotator_ImplBase {
 				uContext.getLogger().log(Level.INFO,
 				"Document with source id:"+thedoc.getSourceID()+" has been "+
 				"stored in medics database with ID:"+thedoc.getReportID()+
-				", exiting not updating...");
+				", updating doc history to show written...");
+				try (Connection conn =  DriverManager.getConnection(medicsConnectionString)){
+					LegacyMedicsTools.updateDocumentHistory(conn,thedoc.getReportID()
+					, analysisId, MedicsConstants.DOCUMENT_DATABASE_WRITE_SUCCESS);
+				}
 				return;
 			} else {
 				uContext.getLogger().log(Level.INFO,

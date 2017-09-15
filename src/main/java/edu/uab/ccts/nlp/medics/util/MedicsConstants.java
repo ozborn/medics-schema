@@ -6,8 +6,6 @@ package edu.uab.ccts.nlp.medics.util;
  *
  */
 public class MedicsConstants {
-	//public static final boolean _IS_DEV = true;
-
 	public final static double ANALYSIS_DOC_PASS_RATE_REQUIRED=90.0; //Percent of documents required
 	
 	public static final int ANALYSIS_FAIL_STATUS=1;
@@ -19,7 +17,8 @@ public class MedicsConstants {
 
 	public static final int DOCUMENT_PROCESSING_INITIATED=1;
 	public static final int DOCUMENT_CONVERTED=2;
-	public static final int DOCUMENT_HITS_PROCESSING_COMPLETE=3;
+	public static final int DOCUMENT_DATABASE_WRITE_SUCCESS=16; // Wrote document to Medics NLP_DOCS
+	public static final int DOCUMENT_ANALYSIS_COMPLETE=3;
 	public static final int DOCUMENT_CONVERSION_FAIL=5;
 	public static final int DOCUMENT_METAMAP_OTHER_PROCESS_FAIL=6;
 	public static final int DOCUMENT_METAMAP_SERVER_DOWN=7;
@@ -31,18 +30,16 @@ public class MedicsConstants {
 	public static final int DOCUMENT_NULL_BLOB_FAILURE=13;
 	public static final int DOCUMENT_DONE_ELSEWHERE=14; //- Document done in another equivalent analysis
 	public static final int DOCUMENT_DATABASE_WRITE_FAIL=15; // Failed to write document to Medics Database
-	public static final int DOCUMENT_DATABASE_WRITE_SUCCESS=16; // Wrote document to Medics NLP_DOCS
 	
 	public static final int DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE=0;
 	public static final int DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE= 0;
 	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 0;
 
 	public final static int MAX_ORACLE_VARCHAR2=3999;
-
 	public final static int MAX_ORACLE_WHERECLAUSE=500;
-	//public final static int MAX_ORACLE_WHERECLAUSE=1000;
 	
 	
+	//FIXME
 	public static final int WORD2VEC_MODEL_CREATION_ANALYSIS=-11;	
 	public static final int WORD2VEC_CUI_MODEL_CREATION_ANALYSIS=-13;
 

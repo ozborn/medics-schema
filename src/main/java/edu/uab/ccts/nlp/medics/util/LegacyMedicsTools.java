@@ -671,6 +671,13 @@ public class LegacyMedicsTools {
 	}
 
 
+	/**
+	 * @deprecated Use DocumentAnalysisJudgeAnnotator
+	 * @param conn
+	 * @param expected_docs
+	 * @param analysis_id
+	 * @throws SQLException
+	 */
 	public static void checkAndUpdateAnalysisStatus(Connection conn, int expected_docs, 
 			int analysis_id) throws SQLException{
 		int status=1;
@@ -679,7 +686,7 @@ public class LegacyMedicsTools {
 		if(expected_docs!=0){
 			String target = " NLP_DOC_HISTORY ";
 			String where_clause=" WHERE ANALYSIS_ID="+analysis_id+
-					" AND (status_id=" +MedicsConstants.DOCUMENT_HITS_PROCESSING_COMPLETE+
+					" AND (status_id=" +MedicsConstants.DOCUMENT_ANALYSIS_COMPLETE+
 					" OR status_id="+MedicsConstants.DOCUMENT_DONE_ELSEWHERE+")";
 			observed_docs = LegacyMedicsTools.countDocuments(conn,target,where_clause);
 			if(observed_docs==expected_docs) {
@@ -788,6 +795,27 @@ public class LegacyMedicsTools {
 			try (Statement st = con.createStatement()) {
 				String query ="SELECT analysis_status FROM NLP_ANALYSIS WHERE "+
 						" analysis_id="+analysis_id;
+				try (ResultSet resultset = (ResultSet) st.executeQuery(query)){
+					if ( !resultset.next() ){
+						return null;
+					}
+					d = new Integer(resultset.getInt(1));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return d;
+	}
+
+	
+	public static Integer getDocumentWorkStatus(String url,
+		int analysis_id, int doc_id) {
+		Integer d=null;
+		try (Connection con =  DriverManager.getConnection(url)){
+			try (Statement st = con.createStatement()) {
+				String query ="SELECT status_id FROM NLP_DOC_HISTORY WHERE "+
+						" analysis_id="+analysis_id+" and document_id="+doc_id;
 				try (ResultSet resultset = (ResultSet) st.executeQuery(query)){
 					if ( !resultset.next() ){
 						return null;

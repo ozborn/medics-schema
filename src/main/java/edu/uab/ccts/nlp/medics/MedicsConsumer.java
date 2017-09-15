@@ -99,7 +99,7 @@ public class MedicsConsumer extends JCasAnnotator_ImplBase {
 				theContext.getLogger().log(Level.SEVERE,"Could not get connetion to "+
 						ExtHitWriterConnectionString+" to write extended hits.");
 			}
-			int old_status = MedicsConstants.DOCUMENT_HITS_PROCESSING_COMPLETE;
+			int old_status = MedicsConstants.DOCUMENT_ANALYSIS_COMPLETE;
 			FSIndex<Annotation> drIndex = jcas.getAnnotationIndex(Document_Results.type);
 			Iterator<Annotation> drIter = drIndex.iterator();
 			if(drIter.hasNext()) {
@@ -109,7 +109,7 @@ public class MedicsConsumer extends JCasAnnotator_ImplBase {
 			if(old_status<MedicsConstants.DOCUMENT_CONVERSION_FAIL) {
 				LegacyMedicsTools.updateDocumentHistory(writeMedicsConn,
 						doc_id.intValue(), analysisId, 
-						MedicsConstants.DOCUMENT_HITS_PROCESSING_COMPLETE);
+						MedicsConstants.DOCUMENT_ANALYSIS_COMPLETE);
 			}
 		} catch (Exception e) {
 			theContext.getLogger().log(Level.WARNING,"Exception getting connection to "+
