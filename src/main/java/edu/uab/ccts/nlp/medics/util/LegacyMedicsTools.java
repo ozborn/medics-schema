@@ -100,8 +100,10 @@ public class LegacyMedicsTools {
 			ParseContext pcontext = new ParseContext();
 			Metadata md = new Metadata();
 			PDFParser parser = new PDFParser();
-			// Slows it down by about 10 percent
-			parser.getPDFParserConfig().setSortByPosition(true);
+			try {
+				// Slows it down by about 10 percent
+				parser.getPDFParserConfig().setSortByPosition(true);
+			} catch (NoSuchMethodError nsme) {}
 			parser.parse(is, bch, md,pcontext);
 			s = bch.toString();
 		} catch (Exception e) {
