@@ -573,7 +573,7 @@ public class LegacyMedicsTools {
 		int docSetID = -1;
 
 		String insertTableSQL = "INSERT INTO NLP_DOCSET "
-				+ "( DESCRIPTION ) VALUES (?,?,?,?)  ";
+				+ "( DESCRIPTION,MRN,START_DATE,END_DATE ) VALUES (?,?,?,?)  ";
 		PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, new String[]{"DOCSET_ID"});
 		preparedStatement.setString(1, doc_set_description );
 		if(mrn==null) mrn="";
