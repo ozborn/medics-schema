@@ -576,9 +576,13 @@ public class LegacyMedicsTools {
 				+ "( DESCRIPTION ) VALUES (?,?,?,?)  ";
 		PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, new String[]{"DOCSET_ID"});
 		preparedStatement.setString(1, doc_set_description );
+		if(mrn==null) mrn="";
 		preparedStatement.setString(2, mrn );
 		preparedStatement.setDate(3, convertString2SqlDate(startdate) );
-		preparedStatement.setDate(4, convertString2SqlDate(enddate));
+		java.sql.Date edate = null;
+		if(enddate==null || enddate.isEmpty()) edate = getTodaysDate();
+		else edate= convertString2SqlDate(enddate);
+		preparedStatement.setDate(4, edate);
 		preparedStatement.executeUpdate();
 		try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys() ) {
 			if (generatedKeys.next()) {
@@ -857,6 +861,16 @@ public class LegacyMedicsTools {
 		DateFormat dateformat = new SimpleDateFormat("dd-MMM-yyyy");
 		java.util.Date udate = dateformat.parse(date);
 		sqldate = new java.sql.Date(udate.getTime());
+		return sqldate;
+	}
+	
+	
+	public static java.sql.Date getTodaysDate() throws ParseException{
+		java.sql.Date sqldate = null;
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, 0); //Today
+		java.util.Date today = cal.getTime();
+		sqldate = new java.sql.Date(today.getTime());
 		return sqldate;
 	}
 
