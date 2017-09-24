@@ -30,12 +30,11 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.html.HtmlParser;
+import org.apache.tika.parser.pdf.PDFParser;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 
 import org.apache.poi.hwpf.extractor.WordExtractor;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.util.PDFTextStripper;
 
 import org.apache.uima.collection.CollectionException;
 import org.slf4j.Logger;
@@ -94,15 +93,16 @@ public class LegacyMedicsTools {
 
 	public static String fetchDoc(Blob pdf) throws Exception {
 		String s = null;
-		try (   StringWriter sw = new StringWriter();
-		        InputStream is = pdf.getBinaryStream();
-		        PDDocument pdoc = PDDocument.load(is)) 
+		try (InputStream is = pdf.getBinaryStream())
 		{
-			PDFTextStripper lady = new PDFTextStripper();
-			lady.setSortByPosition(true); // Slows it down by about 10 percent
-			lady.writeText(pdoc, sw);
-			sw.flush();
-			s = sw.toString();
+			BodyContentHandler bch = new BodyContentHandler();
+			ParseContext pcontext = new ParseContext();
+			Metadata md = new Metadata();
+			PDFParser parser = new PDFParser();
+			// Slows it down by about 10 percent
+			parser.getPDFParserConfig().setSortByPosition(true);
+			parser.parse(is, bch, md,pcontext);
+			s = bch.toString();
 		} catch (Exception e) {
 			try{
 				Metadata metadata = new Metadata();
