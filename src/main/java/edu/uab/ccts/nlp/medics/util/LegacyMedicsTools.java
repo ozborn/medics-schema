@@ -18,6 +18,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 
 import java.text.Normalizer;
+import java.text.ParseException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -566,14 +567,18 @@ public class LegacyMedicsTools {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static int InsertDocSet(Connection conn, String doc_set_description
-			) throws SQLException {
+	public static int InsertDocSet(Connection conn, String doc_set_description,
+			String mrn , String startdate, String enddate
+			) throws SQLException, ParseException {
 		int docSetID = -1;
 
 		String insertTableSQL = "INSERT INTO NLP_DOCSET "
-				+ "( DESCRIPTION ) VALUES (?)  ";
+				+ "( DESCRIPTION ) VALUES (?,?,?,?)  ";
 		PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, new String[]{"DOCSET_ID"});
 		preparedStatement.setString(1, doc_set_description );
+		preparedStatement.setString(2, mrn );
+		preparedStatement.setDate(3, convertString2SqlDate(startdate) );
+		preparedStatement.setDate(4, convertString2SqlDate(enddate));
 		preparedStatement.executeUpdate();
 		try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys() ) {
 			if (generatedKeys.next()) {
@@ -844,6 +849,15 @@ public class LegacyMedicsTools {
 		cal.add(Calendar.DATE, days); //1 day ago
 		java.util.Date oneday = cal.getTime();
 		return dateformat.format(oneday);		
+	}
+	
+	
+	public static java.sql.Date convertString2SqlDate(String date) throws ParseException{
+		java.sql.Date sqldate = null;
+		DateFormat dateformat = new SimpleDateFormat("dd-MMM-yyyy");
+		java.util.Date udate = dateformat.parse(date);
+		sqldate = new java.sql.Date(udate.getTime());
+		return sqldate;
 	}
 
 
