@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Was CollectionReaderTools with all simple CRUD or CRUD-like operations
  * on medics extracted with the Oracle dependency removed.
+ * JPA should eventually replace most of this
  * Does NOT figure out what Metamap port to use
  * Does NOT insert a MedicsAnalysis due to tangled logic
  * Does NOT include analysisAlreadyRun due to software version issues

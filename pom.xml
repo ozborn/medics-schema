@@ -14,6 +14,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<uima.version>2.6.0</uima.version>
+		<jcasgen.version>2.10.1</jcasgen.version>
 		<tika.version>1.16</tika.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -55,7 +56,7 @@
 						<typeSystemInclude>src/main/resources/NLP_Medics_Type_System.xml</typeSystemInclude>
 					</typeSystemIncludes>
 				</configuration>
-				<version>2.4.2</version>
+				<version>${jcasgen.version}</version>
 				<executions>
 					<execution>
 						<goals>
