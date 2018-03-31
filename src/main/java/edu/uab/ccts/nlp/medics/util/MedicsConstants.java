@@ -34,13 +34,27 @@ public class MedicsConstants {
 	public static final int DEFAULT_DOCUMENT_MRN_SENTINEL_VALUE=0;
 	public static final int DEFAULT_DOCUMENT_VERSION_SENTINEL_VALUE= 0;
 	public static final int DEFAULT_ANALYSIS_SENTINEL_VALUE= 0;
+	public static final String DEFAULT_ANALYSIS_VERSION= "0";
 
 	public final static int MAX_ORACLE_VARCHAR2=3999;
 	public final static int MAX_ORACLE_WHERECLAUSE=500;
 	
 	
-	//FIXME
-	public static final int WORD2VEC_MODEL_CREATION_ANALYSIS=-11;	
+	//Due to an unfortunate shortcut, analysis types use negative integers
+	public static final int EMPTY_ANALYSIS=-15;
+	public static final int COPD_ANALYSIS=-14;
 	public static final int WORD2VEC_CUI_MODEL_CREATION_ANALYSIS=-13;
+	public static final int EEG_SEIZURE_ANALYSIS=-12;	
+	public static final int WORD2VEC_MODEL_CREATION_ANALYSIS=-11;
+	public static final int UPDATE_HASHCODE_ANALYSIS=-10;
+	public static final int BONE_LESION_DETECTION_ANALYSIS_ID=-9;
+	public static final int SHARECLEF_2014_POST_COORDINATION_ANALYSIS=-8;
+	public static final int SHARECLEF_2014_ANALYSIS=-7;
+	public static final int SEMEVAL_2014_TASK7_ANALYSIS=-6;
+	public static final int MRN_CRCP_ANALYSIS=-5;
+	public static final int OSTEOPENIA_DETECTION_ANALYSIS_ID=-4;
+	public static final int MELANOMA_EXTRACTION_ANALYSIS_ID=-3;
+	public static final int MELANOMA_DETECTION_ANALYSIS_ID=-2;
+	public static final int PATH_REPORT_ANALYSIS_ID=-1;
 
 }

@@ -11,11 +11,12 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 import org.apache.uima.util.Logger;
 
+import edu.uab.ccts.nlp.medics.util.LegacyMedicsTools;
 import edu.uab.ccts.nlp.uima.ts.NLP_Analysis;
 
 /**
  * Generates based on parameters some metadata about the analysis being performed
- * which can be saved in the Medics schema
+ * and saves it in the medics database
  * @author josborne
  *
  */
@@ -103,6 +104,20 @@ public class AnalysisAnnotator extends JCasAnnotator_ImplBase {
 	@Override
 	public void process(JCas jcas) throws AnalysisEngineProcessException {
 		try {
+		int ainfo[] = LegacyMedicsTools.insertClientAnalysis
+		(medicsConnectionString,
+				analysisType.intValue(),null //MRN
+				,null,null //Comparison Dates 1 and 2
+				,2 //Day back offset
+				,null,null //cflo, icda record types
+				,analysisDescription
+				,null //Docset Description
+				,analysisSoftware,analysisSoftwareVersion
+				,1 //thread count
+				,1 //pipeline type
+				);
+		docSetId = ainfo[0];
+		analysisID = ainfo[1];
 		NLP_Analysis nlpan = new NLP_Analysis(jcas);
 		nlpan.setMedicsURL(medicsConnectionString);
 		nlpan.setAnalysisDescription(analysisDescription);

@@ -16,13 +16,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
-
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -981,6 +981,224 @@ public class LegacyMedicsTools {
 			throw new SQLException(sqle);
 		} 
 		return documentIdentifier;
+	}
+
+
+	/**
+	 * @param medicsurl
+	 * @param analysisType
+	 * @param mrn
+	 * @param comparisonDate
+	 * @param comparisonDate2
+	 * @param daybackoffset
+	 * @param cflo_rec_type
+	 * @param icda_rec_type
+	 * @param analysis_description
+	 * @param docset_description
+	 * @return
+	 * @throws Exception
+	 */
+	public static Hashtable<String,String> insertMedicsAnalysis(String medicsurl,
+			int analysisType, String mrn, String comparisonDate, String comparisonDate2,
+			int daybackoffset, String cflo_rec_type, String icda_rec_type, 
+			String analysis_description, String docset_description,
+			String softwarename, String softwareversion, int thread_count,
+			int pipeline_type) throws Exception {
+		Hashtable<String,String> result = new Hashtable<String,String>();
+	
+		String datenow = getDaysAgoDateString(0);
+		result.put("analysis_start_date", datenow);
+		String docsetdesc = "Unknown document set";
+		String analysisdesc = "Unknown analysis";
+		String pipelinestring = getQueueNameByLegacyId(medicsurl,analysisType);
+		if(softwarename==null)softwarename="Unknown";
+		if(softwareversion==null)softwareversion=MedicsConstants.DEFAULT_ANALYSIS_VERSION;
+	
+	
+		// Generic docset description
+		if(icda_rec_type!=null && icda_rec_type.isEmpty()==false){
+			docsetdesc = "ICDA ("+icda_rec_type+") "; 
+			if(cflo_rec_type!=null && cflo_rec_type.isEmpty()==false){
+				docsetdesc += "Careflow ("+cflo_rec_type+") "; 
+			}
+		} else {
+			if(cflo_rec_type!=null && cflo_rec_type.isEmpty()==false){
+				docsetdesc = "Careflow ("+cflo_rec_type+") "; 
+			}
+		} 
+		
+	
+		if(analysisType==MedicsConstants.PATH_REPORT_ANALYSIS_ID) {
+			docsetdesc = "ICDA PTH Notes signed from ";
+			analysisdesc = "Cancer Pipeline on ICDA PTH Notes signed on ";
+			pipelinestring = "CancerDetectionPipeline";
+			if(comparisonDate==null || comparisonDate.isEmpty()) {
+				docsetdesc+=getDaysAgoDateString(daybackoffset);
+				analysisdesc+=getDaysAgoDateString(daybackoffset)+
+						" iniatated by CRCP PTH cron job";
+			} else {
+				if(comparisonDate2==null || comparisonDate2.isEmpty()){
+					docsetdesc+=comparisonDate.toString();
+					analysisdesc+=comparisonDate.toString();
+				} else {
+					docsetdesc+=comparisonDate.toString()+ " (midnight) to ";
+					docsetdesc+=comparisonDate2.toString()+ " (midnight)";
+					analysisdesc+=comparisonDate.toString()+ " (midnight) to ";
+					analysisdesc+=comparisonDate2.toString()+ " (midnight)";
+				}
+			}
+		} else if(analysisType == MedicsConstants.SEMEVAL_2014_TASK7_ANALYSIS){
+			pipelinestring = "SemEvalDetectionPipeline";
+			docsetdesc = " SemEval Task 7 2014 Docs";
+			analysisdesc = pipelinestring+" on "+datenow;
+		} else if(analysisType == MedicsConstants.SHARECLEF_2014_POST_COORDINATION_ANALYSIS){
+			pipelinestring = "SemEvalPostCoordinationCUIlessPipeline";
+			docsetdesc = "SemEval Task7 CUIless Concepts";
+		} else if(analysisType == MedicsConstants.MELANOMA_DETECTION_ANALYSIS_ID){
+			pipelinestring = "MultipleMyelomaDetectionPipeline";
+		} else if (analysisType == MedicsConstants.MELANOMA_EXTRACTION_ANALYSIS_ID){
+			pipelinestring = "MultipleMyelomaExtractionPipeline";
+		} else if (analysisType == MedicsConstants.OSTEOPENIA_DETECTION_ANALYSIS_ID){
+			pipelinestring = "OsteopeniaDetectionPipeline";
+		} else if (analysisType == MedicsConstants.BONE_LESION_DETECTION_ANALYSIS_ID){
+			pipelinestring = "BoneLesionLucencyDetectionPipeline";
+		} else if (analysisType == MedicsConstants.UPDATE_HASHCODE_ANALYSIS){
+			pipelinestring = "UpdateHashCodePipeline";
+		} else if (analysisType == MedicsConstants.WORD2VEC_MODEL_CREATION_ANALYSIS){
+			pipelinestring = "Word2VecModelCreationPipeline";
+		} else if (analysisType == MedicsConstants.EEG_SEIZURE_ANALYSIS){
+			pipelinestring = "PdfIcuEegSeizureDetectionPipeline";
+		} else {
+			if(!(mrn==null || mrn.isEmpty())) {
+				docsetdesc += " (MRN "+mrn+")";
+			}
+			if(analysis_description!=null) analysisdesc = analysis_description;
+			if(docset_description!=null) docsetdesc = docset_description;
+		}
+	
+		if(analysisType!=MedicsConstants.PATH_REPORT_ANALYSIS_ID){
+			docsetdesc += " up to "+datenow;
+			analysisdesc = pipelinestring+" on "+datenow;
+		}
+		try (Connection conn =  DriverManager.getConnection(medicsurl)){
+			int docset_id = InsertDocSet(conn,docsetdesc,
+					mrn,comparisonDate,comparisonDate2);
+			int analysis_id= InsertAnalysis(conn,
+					pipelinestring,softwarename,docset_id,
+					//ConfigurationSingleton.PTH_METAMAP_SERVER_ALLOCATION,
+					thread_count,
+					analysisdesc,
+					MedicsConstants.ANALYSIS_INITATED_STATUS,softwareversion,
+					pipeline_type);
+	
+			String sanalysisid=Integer.toString(analysis_id);
+			//Fill up our hash
+			result.put("analysis_id",sanalysisid);
+			result.put("docset_id",Integer.toString(docset_id));
+			result.put("analysis_type",Integer.toString(analysisType));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw(e);
+		}
+		return result;
+	}
+
+
+	/**
+	 * @param conn
+	 * @param analysis_type
+	 * @param analysis_software
+	 * @return
+	 * @throws SQLException
+	 */
+	public static int InsertAnalysis(Connection conn,
+			String analysis_type, String analysis_software,
+			int dataset, int caspoolsize, String p_description, int p_status,
+			String software_version,int pipeline_type) throws SQLException {
+		int analysisID = -1;
+	
+		if(analysis_type==null) analysis_type="CancerDetectionPipeline";
+		if(analysis_software==null) analysis_software="UIET";
+	
+		String insertTableSQL = "INSERT INTO NLP_ANALYSIS"
+				+ "(  ANALYSIS_TYPE, ANALYSIS_SOFTWARE, "+
+				"ANALYSIS_DATASET, ANALYSIS_START_DATE , ANALYSIS_DESCRIPTION, ANALYSIS_STATUS, "+
+				"ANALYSIS_SOFTWARE_VERSION, MACHINE, THREAD_COUNT, ANALYSIS_PIPELINE_ID "+
+				") VALUES (?,?,?,SYSDATE,?,?,?,?,?,?)  ";
+		PreparedStatement preparedStatement = conn.prepareStatement(insertTableSQL, new String[]{"ANALYSIS_ID"});
+		preparedStatement.setString(1, analysis_type );
+		preparedStatement.setString(2, analysis_software );
+		preparedStatement.setInt(3, dataset);
+		preparedStatement.setString(4, p_description);
+		preparedStatement.setInt(5, p_status);
+		if(software_version==null) preparedStatement.setString(6, MedicsConstants.DEFAULT_ANALYSIS_VERSION);
+		else preparedStatement.setString(6, software_version);
+		try {
+			preparedStatement.setString(7, InetAddress.getLocalHost().getHostName() );
+		} catch (UnknownHostException e) {
+			preparedStatement.setString(7, "InetAddress.getLocalHost().getHostName " + e.getMessage());
+		}
+		preparedStatement.setInt(8, caspoolsize);
+		if(pipeline_type!=0) preparedStatement.setInt(9, pipeline_type);
+		else preparedStatement.setNull(9,java.sql.Types.NUMERIC);
+	
+		preparedStatement.executeUpdate();
+		try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()){
+			if (generatedKeys.next()) {
+				analysisID = generatedKeys.getInt(1);
+			} else {
+				throw new SQLException("Creating NLP_ANALYSIS, no generated key obtained.");
+			}
+		}
+		preparedStatement.close();
+	
+		return analysisID;
+	}
+	
+	
+	private static String getQueueNameByLegacyId(String connectionString,
+			int legacy_id) {
+		String queue="None";
+			try (Connection con =  DriverManager.getConnection(connectionString)){
+			try (Statement st = con.createStatement()) {
+				String query ="SELECT as_queue_name FROM NLP_ANALYSIS_PIPELINE WHERE "+
+						" legacy_analysis_type_id="+legacy_id;
+				try (ResultSet resultset = (ResultSet) st.executeQuery(query)){
+					if ( !resultset.next() ){
+						return null;
+					}
+					queue = new String(resultset.getString(1));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return queue;
+	
+		
+	}
+
+
+	public static int[] insertClientAnalysis(String medicsurl, int analysis_id_code, 
+			String mrn, String comparisonDate, String comparisonDate2,int daybackoffset, 
+			String cflo_rec_type, String icda_rec_type, String analysis_description,
+			String docset_description,String softname, String softversion,
+			int thread_count, int pipeline_type) throws Exception {
+	
+		Hashtable<String,String> result = null;
+		int[] return_info = new int[2];
+		try {
+			result = insertMedicsAnalysis(medicsurl,analysis_id_code,mrn,comparisonDate,
+					comparisonDate2,daybackoffset,cflo_rec_type,icda_rec_type,analysis_description,
+					docset_description,softname,softversion,thread_count,
+					pipeline_type);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw(e);
+		}
+		return_info[0] = Integer.parseInt(result.get("docset_id"));
+		return_info[1] = Integer.parseInt(result.get("analysis_id"));
+		return return_info;
 	}
 
 
