@@ -24,6 +24,7 @@ import edu.uab.ccts.nlp.uima.ts.NLP_Clobs;
  * which can be saved in the Medics schema
  * Generic code to interrogate the document for metadata should go here
  * @author josborne
+ * @deprecated Should use DatabaseUTF16DocumentAnnotator
  *
  */
 public class DocumentMetaDataAnnotator extends JCasAnnotator_ImplBase {

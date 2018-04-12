@@ -57,4 +57,12 @@ public class MedicsConstants {
 	public static final int MELANOMA_DETECTION_ANALYSIS_ID=-2;
 	public static final int PATH_REPORT_ANALYSIS_ID=-1;
 
+	
+	//VIEWS
+	public static final String JDBC_VIEW = "jdbc_view";
+	public static final String DOCUMENT_IDENTIFIER_VIEW = "document_identifier_view";
+
+	public static final String ASCI_VIEW = "ascii_view";
+	public static final String UTF_VIEW = "utf_view";
+
 }

@@ -12,7 +12,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
-import edu.uab.ccts.nlp.medics.util.LegacyMedicsTools;
+import edu.uab.ccts.nlp.medics.util.MedicsTools;
 
 
 /**
@@ -55,8 +55,9 @@ public class DocConverterAnnotator extends JCasAnnotator_ImplBase {
 				ucon.getLogger().log(Level.WARNING,expected_type+" mimetype not set...");
 			}
 			String datastring = target_jcas.getSofaDataString();
+			MedicsTools mt = new MedicsTools();
 			try(InputStream is = new ByteArrayInputStream(datastring.getBytes(charset))){
-				String converted_pdf = LegacyMedicsTools.tikaFetchDoc(null, is, new Metadata());
+				String converted_pdf = mt.tikaFetchDoc(null, is, new Metadata());
 				JCas converted_view = target_jcas.createView(destination);
 				converted_view.setSofaDataString(converted_pdf, mimetype);
 			} catch (CASException ce) {
