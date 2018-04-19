@@ -5,12 +5,15 @@ import java.sql.DriverManager;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.FSIndex;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
 import edu.uab.ccts.nlp.medics.util.LegacyMedicsTools;
@@ -81,5 +84,14 @@ public class DocumentAnalysisJudgeAnnotator extends JCasAnnotator_ImplBase {
 			throws AnalysisEngineProcessException {
 		return cur_state;
 	}
+	
+	
+	
+	public static AnalysisEngineDescription createAnnotatorDescription() 
+			throws ResourceInitializationException {
+		return AnalysisEngineFactory.createEngineDescription(DocumentAnalysisJudgeAnnotator.class);
+	}
+	
+	
 
 }

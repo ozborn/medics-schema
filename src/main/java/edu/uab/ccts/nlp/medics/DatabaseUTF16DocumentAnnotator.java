@@ -268,6 +268,21 @@ public class DatabaseUTF16DocumentAnnotator extends JCasAnnotator_ImplBase {
 		ps.setString(1, userid);
 		return ps;
 	}
+	
+	
+	public static String getDefaultMedicsDocPreparedStatementSql() {
+		return
+				"SELECT " + 
+				"NC_REPORTID, " + 
+				",NC_CLCONT as docColumn" + 
+				",NC_DOS as creationDateColumn" + 
+				",NC_PT_MRN as mrnColumn" + 
+				",NC_TYPE as typeColumn" + 
+				",NC_SUBTYPE as subtypeColumn" + 
+				",NC_SOURCE as source" + 
+				" FROM NLP_DOCS" + 
+				" WHERE NC_REPORTID=?";
+	}
 
 
 	public static AnalysisEngineDescription createAnnotatorDescription(
@@ -287,5 +302,12 @@ public class DatabaseUTF16DocumentAnnotator extends JCasAnnotator_ImplBase {
 				);
 	}
 
+
+	public static AnalysisEngineDescription createAnnotatorDescription(
+			String sql) throws ResourceInitializationException {
+		return AnalysisEngineFactory.createEngineDescription(DatabaseUTF16DocumentAnnotator.class,
+				PARAM_DOC_SQL,
+				sql);
+	}
 
 }

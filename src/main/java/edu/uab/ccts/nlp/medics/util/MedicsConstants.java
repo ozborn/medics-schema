@@ -1,5 +1,7 @@
 package edu.uab.ccts.nlp.medics.util;
 
+import org.apache.uima.cas.CAS;
+
 /**
  * Medics Related configuration information, should externalize to property file
  * @author josborne
@@ -63,6 +65,7 @@ public class MedicsConstants {
 	public static final String DOCUMENT_IDENTIFIER_VIEW = "document_identifier_view";
 
 	public static final String ASCI_VIEW = "ascii_view";
-	public static final String UTF_VIEW = "utf_view";
+	//public static final String UTF_VIEW = "utf_view";
+	public static final String UTF_VIEW = CAS.NAME_DEFAULT_SOFA;
 
 }
